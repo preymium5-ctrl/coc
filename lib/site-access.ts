@@ -1,8 +1,8 @@
 import {env} from '#raidroom-runtime';
 import {ApiError,normalizeTag} from './coc-service.mjs';
 import {hashSecret,randomSecret,verifySecret,sessionToken,passwordLoginEnabled,passwordVerifier,hostedAdmin,SESSION_COOKIE,SESSION_SECONDS} from './admin-auth.mjs';
-import {getClan,getCurrentClanWar} from './clan-service';
-import {publishedClan,type PublishedClan} from './published-clan';
+import {getClan,getCurrentClanWar,getCapitalRaids} from './clan-service';
+import {publishedClan,publishedClans,type PublishedClan} from './published-clan';
 import {activityStatus} from './activity-sync';
 export {publishedClan} from './published-clan';
 
@@ -15,7 +15,11 @@ export async function isAdmin(request:Request){
   return !!session&&session.expires_at>Date.now();
 }
 export async function requireAdmin(request:Request){if(!await isAdmin(request))throw new ApiError(401,'admin_required','Sign in as an administrator to make changes.');}
-export async function siteState(request:Request){const clan=await publishedClan();return {clan,admin:await isAdmin(request),localLogin:passwordLoginEnabled(request,process.env),nativeLogin:process.env.VERCEL!=='1',activitySync:await activityStatus(clan?.tag||null)};}
+export async function siteState(request:Request){
+  const clans=await publishedClans(),selected=new URL(request.url).searchParams.get('clan');
+  const clan=clans.find(c=>c.tag===selected)||clans[0]||null;
+  return {clan,clans,primaryClan:clans[0]||null,admin:await isAdmin(request),localLogin:passwordLoginEnabled(request,process.env),nativeLogin:process.env.VERCEL!=='1',activitySync:await activityStatus(clan?.tag||null)};
+}
 export async function savePublishedClan(request:Request,input:{tag?:unknown;timeZone?:unknown}){
   await requireAdmin(request);
   const tag=normalizeTag(input.tag),timeZone=typeof input.timeZone==='string'?input.timeZone:'Asia/Singapore';
@@ -32,18 +36,22 @@ export async function unpublishClan(request:Request){
 }
 export async function authorizeClan(request:Request,input:string){
   const tag=normalizeTag(input);if(await isAdmin(request))return tag;
-  const clan=await publishedClan();
-  if(!clan||clan.tag!==tag)throw new ApiError(404,'clan_not_published','This clan is not available on this site.');
+  const clans=await publishedClans();
+  if(!clans.some(clan=>clan.tag===tag))throw new ApiError(404,'clan_not_published','This clan is not available on this site.');
   return tag;
 }
 export async function authorizeMember(request:Request,input:string){
   const tag=normalizeTag(input);if(await isAdmin(request))return tag;
-  const config=await publishedClan();
-  if(config){
+  const configs=await publishedClans();
+  for(const config of configs){
     const clan=await getClan(config.tag);
     if(clan.memberList.some((member:{tag:string})=>member.tag===tag))return tag;
+  }
+  for(const config of configs){
     const war=await getCurrentClanWar(config.tag);
     if(war.data?.clan?.members?.some((member:{tag:string})=>member.tag===tag))return tag;
+    const raids=await getCapitalRaids(config.tag).catch(()=>null);
+    if(raids?.members?.some((member:{tag:string;attacks:number})=>member.tag===tag&&member.attacks>0))return tag;
   }
   throw new ApiError(404,'member_not_published','This player is not part of the published clan.');
 }

@@ -1,5 +1,10 @@
-/* Raidroom: white canvas, black navigation, electric-blue details. */
+@font-face{font-family:THICCCBOI;src:url('./assets/fonts/THICCCBOI-Medium.woff2') format('woff2');font-style:normal;font-weight:400 500;font-display:swap}
+@font-face{font-family:THICCCBOI;src:url('./assets/fonts/THICCCBOI-SemiBold.woff2') format('woff2');font-style:normal;font-weight:550 650;font-display:swap}
+@font-face{font-family:THICCCBOI;src:url('./assets/fonts/THICCCBOI-Bold.woff2') format('woff2');font-style:normal;font-weight:700 900;font-display:swap}
+/* Marine x Durugista: white canvas, black navigation, blue details. */
 :root {
+  --font: THICCCBOI, sans-serif;
+  --display: THICCCBOI, sans-serif;
   --bg: #f6f8fc;
   --sidebar: #101114;
   --panel: #ffffff;

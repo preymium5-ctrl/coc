@@ -108,8 +108,8 @@ function renderClanMember(){
 async function loadClan(input){
   if(window.RaidroomAccess&&!clanAdmin()&&input!==window.RaidroomAccess.clanTag)return;
   if(!validTag(input)){clanError='Enter the clan tag from the in-game clan profile.';render();return;}
-  const epoch=++clanEpoch;syncEpoch++;clanSyncing=false;memberEpoch++;selectedMember=null;memberDetails=null;clanTag='#'+normalizedTag(input);clanData=null;clanBoard=null;clanTodayBoard=null;clanWar=null;clanLoading=true;clanError='';render();
-  try{const data=await clanJSON(clanPath());if(epoch!==clanEpoch)return;clanData=data;clanLoading=false;render();await loadClanBoard();loadClanWar();}
+  const epoch=++clanEpoch;syncEpoch++;clanSyncing=false;memberEpoch++;selectedMember=null;memberDetails=null;clanTag='#'+normalizedTag(input);clanData=null;clanBoard=null;clanTodayBoard=null;clanWar=null;clanLoading=true;clanError='';resetClanEvents();render();
+  try{const data=await clanJSON(clanPath());if(epoch!==clanEpoch)return;clanData=data;clanLoading=false;render();await loadClanBoard();loadClanWar();loadClanEvents();}
   catch(error){if(epoch===clanEpoch){clanLoading=false;clanError=error.message;render();}}
 }
 async function loadClanBoard(){
@@ -120,7 +120,7 @@ async function loadClanBoard(){
 async function loadClanWar(){const tag=clanTag;try{const data=await clanJSON(clanPath('/war'));if(tag!==clanTag)return;clanWar=data;}catch(error){if(tag===clanTag)clanWar={status:'unavailable',error:error.message};}if((view==='clan'||view==='war')&&clanTab==='war'&&!selectedMember)render();}
 async function startClanSync(){
   if(!clanAdmin())return;
-  try{const data=await clanJSON('/api/activity-sync',{method:'POST'});window.RaidroomAccess.activitySync=data.activitySync;render();toast(data.activitySync.state==='running'?'Activity is already syncing.':'Sync requested. The background collector will pick it up automatically.');await refreshSiteState();}
+  try{const data=await clanJSON('/api/activity-sync?clan='+encodeURIComponent(clanTag),{method:'POST'});window.RaidroomAccess.activitySync=data.activitySync;render();toast(data.activitySync.state==='running'?'Activity is already syncing.':'Sync requested. The background collector will pick it up automatically.');await refreshSiteState();}
   catch(error){clanError=error.message;render();}
 }
 
@@ -133,7 +133,7 @@ function changeClan(){if(clanAdmin()){navigate('overview');setTimeout(()=>$('#pu
 
 async function refreshClanData(){
   const tag=clanTag;clanError='';
-  try{const data=await clanJSON(clanPath());if(tag!==clanTag)return;clanData=data;render();await loadClanBoard();loadClanWar();}
+  try{const data=await clanJSON(clanPath());if(tag!==clanTag)return;clanData=data;render();await loadClanBoard();loadClanWar();loadClanEvents();}
   catch(error){if(tag===clanTag){clanError=error.message;render();}}
 }
 document.addEventListener('submit',event=>{if(event.target.id==='clan-search-form'){event.preventDefault();loadClan($('#clan-tag-input').value);}});

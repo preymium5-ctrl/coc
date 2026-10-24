@@ -111,8 +111,8 @@ function renderRanked(){
 }
 
 render=function(){
-  if(view==='clan'){$('#main-content').innerHTML=renderClan();updateSidebar();document.title='Clan hub · Raidroom';}
-  else if(view==='ranked'&&hasPlayer()){$('#main-content').innerHTML=renderRanked();updateSidebar();document.title='Ranked battles · Raidroom';}
+  if(view==='clan'){$('#main-content').innerHTML=renderClan();updateSidebar();document.title='Clan hub · MARINE X DURUGISTA';}
+  else if(view==='ranked'&&hasPlayer()){$('#main-content').innerHTML=renderRanked();updateSidebar();document.title='Ranked battles · MARINE X DURUGISTA';}
   else oldRender();
   $('#sidebar-source').textContent=state.source==='live'?'Connected game profile':hasPlayer()?'Saved on this device':'No player connected';
   $('#add-player-side').innerHTML=icon('search')+'Find a player';
@@ -207,7 +207,7 @@ async function refreshLivePlayer(){
 document.addEventListener('click',event=>{if(event.target.closest('[data-live-refresh]'))refreshLivePlayer();});
 readBackup=function(parsed){
   if(parsed.source!=='live')return oldReadBackup(parsed);
-  if(parsed.version!==1||!Array.isArray(parsed.battles)||!Array.isArray(parsed.snapshots))throw new Error('Choose a Raidroom JSON backup.');
+  if(parsed.version!==1||!Array.isArray(parsed.battles)||!Array.isArray(parsed.snapshots))throw new Error('Choose a MARINE X DURUGISTA JSON backup.');
   const player=cleanPlayer(parsed.player);
   const inRange=(value,min,max)=>value===null||isKnown(value)&&value>=min&&value<=max;
   const battles=parsed.battles.filter(b=>!RaidroomRecords.isSampleBattle(b)).slice(0,2000).map(b=>{

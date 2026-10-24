@@ -1,4 +1,4 @@
-# Raidroom
+# MARINE X DURUGISTA
 
 A Clash of Clans dashboard in white, black, and blue with authentic game artwork, automatic player lookup, a battle journal, a clan hub, rankings, and a recording library.
 
@@ -14,7 +14,7 @@ Copy `.env.example` to `.env`. Create a free developer key at <https://developer
 
 ## Admin and public views
 
-`/` is the visitor dashboard: Overview, Members, Clan rankings, Current war, and Giveaways. It reads one clan selected in server-side settings, so every browser sees the same choice. Visitors can filter ranking periods and inspect published clan/war members. The server rejects anonymous settings changes and activity syncs, and rejects direct reads of other clans or players outside the published clan/war roster. Giveaway winners, claim statuses, and upcoming events are the owner-provided announcements in `publicGiveaways()` in `public/access.js`; they appear on Overview and at `/#giveaways`.
+`/` is the visitor dashboard: Overview, Members, Clan rankings, Current war, Capital raids, Clan Games, and Giveaways. Visitors choose the main Marine clan or extension Durugista (`#2J028VPVY`) from Overview; this choice persists in their browser and can be shared with `?clan=%232J028VPVY`. Choosing a clan changes all its feeds without changing the published settings. The server restricts public reads to these two clans and their roster, war, or raid participants. Public visitors cannot edit settings or Games scores. Giveaway winners, claim statuses, and upcoming events are the owner-provided announcements in `publicGiveaways()` in `public/access.js`; they appear on Overview and at `/#giveaways`.
 
 `/admin` is the management workspace. In **Overview**, enter the clan tag and choose **Create clan**; Supercell supplies the name and badge. **Save clan** replaces the public selection. **Unpublish clan** hides it while preserving collected activity. The time zone saved with the clan is shared by all visitor views.
 
@@ -28,19 +28,27 @@ Open a member to see up to ten newest recorded classic attacks in the selected p
 
 Member cards show ranked attacks for the current tournament week, independently of the day/week/month loot filter. Member profiles use `currentLeagueSeasonId` from the official profile to determine their tournament: seven days for Ranked/Legend III/II, 28 days for Legend I. When no season is provided, the ranked week begins Monday 05:00 UTC. The collector requests the player's official league group and saves its attack log alongside general battle/history feeds, including previously completed attacks. Matching hits with timestamp differences of at most one second are merged by mode, direction, and opponent tag; existing loot is preserved and duplicate rows are removed atomically. Classic attacks and best single-attack loot still follow the selected day, week, or month. Defenses are excluded, other attack modes are not assigned to either count, and missing loot stays unknown. The maximum uses all saved records within the period, independently of the 3,000-record army-usage limit.
 
-An administrator adds the shared clan from **Overview** at `/admin`. Visitors open `/` and see only that published clan. The public pages have no clan/player switcher or editing tools. The roster shows names, Town Halls, player levels, and recorded activity. Select a member for hero, troop, spell, and pet levels; daily, weekly, and monthly loot and attack totals; army usage; and recorded CWL season averages. The current-war tab shows the real opponent, score, destruction, and war roster when the war log is public.
+An administrator manages the main clan from **Overview** at `/admin`; Durugista is configured as the extension in `lib/published-clan.ts`. Visitors can switch between the two published clans without arbitrary player searches or editing tools. The roster shows names, Town Halls, player levels, and recorded activity. Select a member for hero, troop, spell, and pet levels; daily, weekly, and monthly loot and attack totals; army usage; and recorded CWL season averages. The current-war tab shows the real opponent, score, destruction, and war roster when the war log is public.
 
 Clan leaderboards rank the current roster by reported gold + elixir or attacks made. Dark elixir is separate in member profiles. Periods use the clan's saved time zone: calendar days, weeks beginning Monday, and calendar months. Defenses are excluded. Repeated syncs upsert the same battle instead of counting it again. Saved public battle observations live in the local D1 database under `.wrangler/state`, independently of browser journals; retain that directory to keep the history.
 
 A local server-owned collector automatically starts with `npm run dev` or `npm start`. It runs a clan-wide activity round once a minute, in two concurrent batches of at most two members each. It continues when admin pages and browser tabs are closed. The computer and local server must remain running. Public rankings and open member details refresh every 30 seconds; returning to a visible tab refreshes immediately. **Sync now** queues a round without overlapping an active one.
 
-The collector reads the currently published clan from the database each round; it never uses a browser's stored selection or session. It collects the available current-month/current-week history. A database lease prevents duplicate workers, progress acknowledgements are idempotent, and interrupted rounds recover automatically after their lease expires. Unavailable member feeds are marked for automatic retry while their saved records remain intact. The dashboard shows collector connectivity, member progress, and last-sync time.
+The collector reads the published clan family from server settings each round; it never uses a browser's stored selection or session. Both clans have independent rosters, leases, schedules, and progress. The Vercel cron processes both clans in each invocation; the local collector chooses the next due clan. It collects the available current-month/current-week history. A database lease prevents duplicate workers, progress acknowledgements are idempotent, and interrupted rounds recover automatically after their lease expires. Unavailable member feeds are marked for automatic retry while their saved records remain intact. The dashboard shows collector connectivity, member progress, and last-sync time.
 
 The local collector uses a generated `RAIDROOM_ACTIVITY_SYNC_KEY` in the ignored `.env` and a loopback-only service endpoint. It cannot change site settings, and public visitors cannot invoke it. It exits when its parent server stops. No Codex chat or scheduled ChatGPT automation is needed. Hosted unattended collection would require a separately configured supported scheduler; this local change does not deploy or schedule anything on the hosted Site. Provider coverage varies: counts and loot are recorded totals, not guaranteed complete history. A zero means no recorded attacks in the window; unknown loot remains blank. Members who leave the clan no longer appear in its current-roster ranking.
 
 Troop usage counts the reported attacking armies containing a troop, grouped into classic (farming/ranked/Legend) and war (regular war/CWL). Only decodable army share codes contribute; unlocked troops are never used as a substitute. The usage sample is limited to the latest 3,000 saved records, while loot totals aggregate all saved records. War compositions often are not supplied. CWL averages divide valid recorded stars by attacks made and show missed attacks separately.
 
 Hero, troop, spell, and pet denominators use Town Hall-specific maxima from the bundled ClashKing game catalogue. Builder Base units use Builder Hall. Twelve authentic pet icons are stored locally. Run `npm run data:sync` to update the catalogue and pet assets from [ClashKingAssets](https://github.com/ClashKingInc/ClashKingAssets); inspect the resulting game data before committing it.
+
+### Capital Raids and Clan Games
+
+Capital raids (`/#capital`) uses Supercell’s `capitalraidseasons` feed: Capital Hall and district levels, weekend dates, Capital Gold, attacks, top-three contributors, remaining members, and current non-participants. Former members who participated remain in the weekend results; missing Town Halls stay unknown. The latest completed weekend is labeled as completed between events. Overview’s daily loot podium and the raid podium use gold, silver, and bronze medals.
+
+Clan Games (`/#games`) tracks the monthly event separately for each clan. Supercell exposes lifetime **Games Champion** points, not a current-event leaderboard. The collector saves counter observations and available ClashKing `clan_games` history. A pre-event baseline gives an exact score; tracking that starts mid-event produces a clearly labeled lower bound, with unknown scores kept unknown. In `/admin#games`, an admin can confirm a member’s in-game score; subsequent counter increases automatically add to it. Standard event dates are the 22nd–28th each month at 08:00 UTC; special event schedules may differ. Scores and baselines are stored per clan, month, and player in `site_settings`, and concurrent observations use compare-and-swap updates. No historical event score is invented from lifetime points.
+
+The reference typography is **THICCCBOI** by Wonder Unit, self-hosted in `public/assets/fonts` with its SIL Open Font License. Capital Hall and event assets are credited in `public/assets/game/ATTRIBUTION.txt`.
 
 ### Fresh local database setup
 
@@ -54,7 +62,7 @@ Then apply `drizzle/0001_tough_power_pack.sql` and `drizzle/0002_slippery_blade.
 
 ## Automatic data
 
-Entering a player tag fetches the public Supercell profile through the Site's server. Raidroom detects the name, experience level, Town Hall, trophies, league, clan, troop levels, spell levels, heroes, and equipment. Refresh reloads the profile and activity; an open tab refreshes every five minutes.
+Entering a player tag fetches the public Supercell profile through the Site's server. The dashboard detects the name, experience level, Town Hall, trophies, league, clan, troop levels, spell levels, heroes, and equipment. Refresh reloads the profile and activity; an open tab refreshes every five minutes.
 
 Recent battle results and league groups come from the official API. ClashKing supplements recorded history and global/country rankings. Each result identifies its source. Missing values remain unknown, and provider outages show coverage messages without fabricating records. No complete historical feed is guaranteed; older battles depend on provider coverage and records retained in this browser.
 

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Raidroom — Your village, in focus",
-  description: "Look up your Clash of Clans village, track your progress, and explore recent and ranked battles.",
+  title: "MARINE X DURUGISTA — Our clans, in focus",
+  description: "Follow Marine and Durugista: members, loot rankings, current war, Capital Raids, and Clan Games.",
   icons: {
     icon: "/assets/favicon.svg",
     shortcut: "/assets/favicon.svg",

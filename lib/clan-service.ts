@@ -2,6 +2,8 @@ import {ApiError,configuration,normalizeTag,getPlayer,officialGet,communityGet,n
 import {periodBounds,collectionStart,decorateProfile,troopUsage,cwlAverages,orientWar} from './clan-analytics.mjs';
 import {cached,playerBattles,savedBattlesById,savedRankedBattles,saveBattles,syncInfo,clanTotals,memberAttacks} from './clan-store';
 import {rankedWindow,fetchRankedTournament} from './ranked-tournament.mjs';
+import {capitalRaidSummary} from './clan-events.mjs';
+import {observeClanGames,readClanGames,verifyClanGamesScore} from './clan-games';
 
 export async function getPublicProfile(input:string){const tag=normalizeTag(input);return cached('profile:'+tag,async()=>decorateProfile(await getPlayer(tag)),90);}
 export async function getClan(input:string){
@@ -16,6 +18,7 @@ async function collectPlayer(tag:string,timeZone:string,knownProfile?:any){
   const baseAfter=collectionStart(timeZone),saved=await syncInfo(tag),prior=saved?JSON.parse(saved.coverage):null;
   if(saved&&Date.now()-saved.synced_at<45000&&prior.ranked&&prior.windowStart<=baseAfter)return {tag,coverage:prior,cached:true};
   const profile=knownProfile||await getPublicProfile(tag).catch(()=>null),window=rankedWindow(profile);
+  if(profile)await observeClanGames(profile);
   const after=new Date(Math.min(Date.parse(baseAfter),Date.parse(window.start))).toISOString();
   const result=await cached('combat:v2:'+tag+':'+after,async()=>{
     const [recent,history,tournament]=await Promise.allSettled([
@@ -65,6 +68,28 @@ export async function getMemberDetails(input:string,timeZone='Asia/Singapore'){
   const window=rankedWindow(profile),[rankedRows,rankedHistory]=await Promise.all([clanTotals([tag],window.start,window.end),memberAttacks(tag,window.start,window.end)]);
   const ranked={...rankedRows[0],window,attackHistory:{ranked:rankedHistory.attackHistory.ranked},tournament:sync.coverage.ranked};
   return {profile,periods,ranked,coverage:sync.coverage,usage:{classic:troopUsage(current,'classic'),war:troopUsage(current,'war'),limited:battles.length===3000},cwl,timeZone,fetchedAt:new Date().toISOString()};
+}
+
+export async function getCapitalRaids(input:string){
+  const clan=await getClan(input);
+  const payload=await cached('capital-raids:'+clan.tag,()=>officialGet('/clans/'+encodeURIComponent(clan.tag)+'/capitalraidseasons?limit=2',configuration(),undefined),30);
+  return capitalRaidSummary(clan,payload);
+}
+export async function getClanGames(input:string){
+  const clan=await getClan(input);
+  // The automatic collector records the whole roster; fill any new member snapshots on demand.
+  const current=await readClanGames(clan),missing=current.members.filter((m:any)=>!m.startedAt);
+  let cursor=0;
+  await Promise.all(Array.from({length:4},async()=>{while(cursor<missing.length){const member=missing[cursor++];await getPublicProfile(member.tag).then(observeClanGames).catch(()=>null);}}));
+  return readClanGames(clan);
+}
+export async function setClanGamesPoints(clanInput:string,playerInput:string,points:unknown){
+  const clan=await getClan(clanInput),tag=normalizeTag(playerInput);
+  if(!clan.memberList.some((m:any)=>m.tag===tag))throw new ApiError(400,'not_clan_member','This player is no longer on this clan’s roster.');
+  const profile=await getPlayer(tag);
+  if(profile.clan?.tag!==clan.tag)throw new ApiError(400,'not_clan_member','Refresh the clan roster before editing this member.');
+  await verifyClanGamesScore(profile,points);
+  return readClanGames(clan);
 }
 type War={state?:string;clan?:{tag?:string};opponent?:{tag?:string};startTime?:string;[key:string]:unknown};
 export async function getCurrentClanWar(input:string){

@@ -110,7 +110,7 @@
 .war-side>small { display:block; font-size:10px; color:#9aa9bf; margin-top:12px; }
 .war-destruction { max-width:240px; margin:auto; background:#edf2fa; height:5px; border-radius:9px; overflow:hidden; }
 .war-destruction i { display:block; height:100%; background:#4c88f0; border-radius:9px; }
-.war-vs { font:700 24px 'Barlow Condensed',sans-serif; color:#afbdd2; }
+.war-vs { font:700 24px var(--display); color:#afbdd2; }
 .war-source { text-align:center; color:#a1aec1; font-size:9px; margin:20px 0 0; }
 .member-back { margin:0 0 22px; font-size:11px; }
 .member-profile-hero { display:flex; align-items:center; gap:30px; padding:30px; margin-bottom:28px; }

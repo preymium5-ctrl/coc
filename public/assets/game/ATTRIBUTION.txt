@@ -24,3 +24,12 @@ Supercell Fan Content Policy:
 https://supercell.com/en/fan-content-policy/
 
 This material is unofficial and is not endorsed by Supercell.
+
+Clan Capital Hall levels 1–10, Capital Gold, and Clan Games medal:
+https://github.com/ClashKingInc/ClashKingAssets/tree/master/assets/bot/capital
+https://github.com/ClashKingInc/ClashKingAssets/tree/master/assets/bot/icons
+https://github.com/ClashKingInc/ClashKingAssets/tree/master/assets/resources
+
+THICCCBOI font by Wonder Unit, SIL Open Font License 1.1:
+https://github.com/wonderunit/font-thicccboi
+License included in ../fonts/OFL.txt

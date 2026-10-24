@@ -20,6 +20,20 @@ function fixture(t){
   return db;
 }
 const tag='#V822RGUG',now=1_800_000_000_000;
+
+test('main and extension clans maintain independent rosters, leases, progress, and sync schedules',async t=>{
+  const db=fixture(t),extension='#2J028VPVY';
+  for(const clan of [tag,extension])await touchCollector(db,clan,now);
+  assert.ok(await claimJob(db,tag,'main-run',now));assert.ok(await claimJob(db,extension,'extension-run',now));
+  await setJobRoster(db,tag,'main-run',['#MAIN'],now);await setJobRoster(db,extension,'extension-run',['#EXT'],now);
+  await completeMembers(db,tag,'main-run',[{tag:'#MAIN'}],now+100);
+  assert.equal((await readJob(db,tag)).status,'complete');assert.equal((await readJob(db,extension)).completed,0);
+  await completeMembers(db,extension,'main-run',[{tag:'#EXT'}],now+200);
+  assert.equal((await readJob(db,extension)).completed,0,'another clan’s run cannot acknowledge this roster');
+  await completeMembers(db,extension,'extension-run',[{tag:'#EXT'}],now+300);
+  assert.equal((await readJob(db,extension)).status,'complete');
+  assert.deepEqual(JSON.parse((await readJob(db,extension)).roster_tags),['#EXT']);
+});
 test('the database lease allows one collector to claim a due run',async t=>{
   const db=fixture(t);await touchCollector(db,tag,now);
   const runs=await Promise.all([claimJob(db,tag,'one',now),claimJob(db,tag,'two',now)]);
