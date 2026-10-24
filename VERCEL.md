@@ -38,7 +38,7 @@ After deployment, open **`https://YOUR-SITE.vercel.app/admin`**, sign in with th
 
 ## 3. Choose the automatic sync schedule
 
-The included Vercel cron runs **once daily**, compatible with Hobby. The dashboard reports this interval accurately. Rankings in an open browser refresh every 30 seconds; fresh activity still depends on the collection schedule and provider availability.
+The included Vercel cron runs **every minute** for the Pro deployment at `clashofclans.dev`. Set `RAIDROOM_SYNC_INTERVAL_SECONDS=60` in Production. Rankings in an open browser refresh every 30 seconds; fresh activity still depends on the collection schedule and provider availability. For a Hobby deployment, change the cron schedule to `0 0 * * *` and the interval to `86400`.
 
 For **one-minute collection on Hobby**, configure an external HTTP scheduler to make a GET request every minute to:
 

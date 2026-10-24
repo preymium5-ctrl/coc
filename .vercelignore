@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+.openai/local/
+.openai/cache/
+.wrangler/
+.sites-runtime/
+.git/
+node_modules/
+dist/
+.next/
+.next-vercel/
+*.log
+*.tsbuildinfo
+.agents/
+skills-lock.json

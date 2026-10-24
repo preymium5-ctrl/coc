@@ -16,4 +16,6 @@ node_modules/
 *.tsbuildinfo
 .dev.vars*
 .vercel/
-
+next-env.d.ts
+.agents/
+skills-lock.json
