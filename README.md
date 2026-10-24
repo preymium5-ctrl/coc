@@ -1,6 +1,6 @@
 # Raidroom
 
-A responsive Clash of Clans companion dashboard with an original illustrated village, player profiles, a battle journal, trophy charts, a personal loot leaderboard, and a playable video library.
+A responsive Clash of Clans companion dashboard in white, black, and blue, with authentic game artwork, player profiles, a battle journal, trophy charts, a personal loot leaderboard, and a playable video library.
 
 ## Run locally
 
@@ -41,9 +41,15 @@ Records are local to the browser, rather than shared or synchronized between dev
 npm run check
 ```
 
-## Artwork
+## Game artwork and design
 
-`dist/assets/village-hero.png` was created with the built-in ImageGen tool. Prompt: “Wide cinematic, polished stylized 3D fantasy village for a game statistics dashboard: emerald-roofed town hall, warm golden details, purple elixir vessels, defensive watchtowers, pine forest, mountain waterfalls and sunset. Elevated isometric composition with village on the right and dark forest negative space on the left. No text, logos, UI, or watermark.”
+The site uses a white canvas, black sidebar, and blue actions and charts. The official game renders retain their original colors.
+
+- The hero and recording cover use the [official Clash of Clans game-page artwork](https://supercell.com/en/games/clashofclans/), downloaded unchanged from [Supercell's image CDN](https://supercell.com/images/ae58a39e76410b4ae9c2bea65d4a584d/hero_bg_clashofclans_.fae7c799.jpg) to `dist/assets/clash-official-banner.jpg`.
+- Town Halls 1–18, six heroes, eight troops, four spells, and three resource images are real Supercell game assets distributed through [ClashKing Assets](https://github.com/ClashKingInc/ClashKingAssets). The images used by the sample village are included in `dist/assets/game/`; other imported units request their corresponding image from the documented `https://assets.clashk.ing/` CDN. If an image is unavailable, an accessible icon fallback is shown.
+- Attribution to Supercell and ClashKing is visible in the footer. Supercell owns the game artwork. See [Supercell's Fan Content Policy](https://supercell.com/en/fan-content-policy/).
+
+No generated fantasy artwork is used by the current site. The original illustration is preserved in the prior Git version.
 
 ## Unofficial fan content
 
