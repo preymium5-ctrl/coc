@@ -1,0 +1,13 @@
+{
+  "name": "raidroom",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Clash of Clans companion dashboard with a local battle journal and video library.",
+  "type": "module",
+  "scripts": {
+    "dev": "node serve.mjs",
+    "start": "node serve.mjs",
+    "check": "node --check dist/app.js && node --check serve.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
