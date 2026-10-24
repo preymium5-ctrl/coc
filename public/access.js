@@ -137,7 +137,7 @@ document.addEventListener('submit',async event=>{
 });
 document.addEventListener('click',async event=>{
   const family=event.target.closest('[data-family-clan]');
-  if(family&&family.dataset.familyClan!==siteAccess.clanTag){
+  if(family&&(family.dataset.familyClan!==siteAccess.clanTag||family.dataset.familyClan!==preferredClan)){
     preferredClan=family.dataset.familyClan;try{localStorage.setItem('marine-durugista.clan',preferredClan);}catch{}
     const url=new URL(location.href);url.searchParams.set('clan',preferredClan);history.replaceState(null,'',url);await refreshSiteState(true);return;
   }
