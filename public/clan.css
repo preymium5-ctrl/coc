@@ -49,11 +49,18 @@
 .member-card-stats small { display:block; font-size:9px; color:#95a0b2; margin-bottom:7px; }
 .member-card-stats strong { font-size:13px; font-weight:650; color:#2d3c55; }
 .member-card-stats>span:last-child strong { color:#2563eb; }
+.member-card-activity { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; background:#f3f7ff; border:1px solid #e6edfa; border-radius:9px; padding:13px 11px; margin:0 0 15px; }
+.member-card-activity small { display:block; font-size:9px; color:#71839f; margin-bottom:7px; line-height:1.5; }
+.member-card-activity strong { font-size:17px; font-weight:650; color:#244e94; }
+.member-card-activity>span:last-child strong { color:#2563eb; }
+.clan-roster-periods { margin-top:-3px; }
+.clan-roster-periods>.reduced-meta { margin-left:auto; font-size:10px; }
 .member-card-foot { display:flex; align-items:center; justify-content:space-between; border-top:1px solid #eff2f7; padding-top:13px; color:#9aa5b6; font-size:9px; gap:10px; }
 .member-card-foot span { display:flex; align-items:center; gap:5px; }
 .member-card-foot svg { width:12px; height:12px; color:#91a9d5; }
 .clan-coverage { font-size:10px; line-height:1.9; color:#8c99ae; margin:20px 0 24px; display:flex; align-items:flex-start; gap:8px; }
 .clan-coverage>svg { width:14px; height:14px; flex-shrink:0; margin-top:3px; }
+.member-periods+.clan-stat-grid .clan-stat:last-child { grid-column:auto; }
 .clan-sync-progress { display:flex; align-items:center; position:relative; gap:12px; border:1px solid #d8e6ff; border-radius:8px; background:#f0f6ff; padding:15px 17px 20px; font-size:11px; color:#7190bd; margin-bottom:24px; overflow:hidden; }
 .clan-sync-progress>.lookup-spinner { width:18px; height:18px; border-width:2px; }
 .clan-sync-progress strong { margin-left:8px; color:#2563eb; font-weight:650; }

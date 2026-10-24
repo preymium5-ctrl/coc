@@ -13,6 +13,13 @@ const officialEntry = {
 };
 const json = data => Response.json(data);
 
+test('classic and unranked feeds map to farming while ranked and Legend keep their own modes',()=>{
+  for(const [battleType,mode] of [['classic','farming'],['unranked','farming'],['multiplayer','farming'],['ranked','ranked'],['legend','legend']]){
+    const [battle]=normalizeBattles([{...officialEntry,battleType}],tag);
+    assert.equal(battle.mode,mode);
+  }
+});
+
 test('player input is normalized and rejects paths before any upstream request', async () => {
   assert.equal(normalizeTag(' 80yqj0rqq '), tag);
   let called = false;

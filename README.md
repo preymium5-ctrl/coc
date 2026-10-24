@@ -24,6 +24,8 @@ Hosted Sites keep the native Sign in with ChatGPT integration. Before a future d
 
 ## Clan hub
 
+Member cards and profiles show recorded ranked attacks, classic attacks, and the highest reported gold + elixir from one attack for the selected day, week, or month. Ranked includes Legend; classic means multiplayer farming. Defenses are excluded, other attack modes are not assigned to either count, and missing loot stays unknown. The maximum uses all saved records within the period, independently of the 3,000-record army-usage limit.
+
 An administrator adds the shared clan from **Overview** at `/admin`. Visitors open `/` and see only that published clan. The public pages have no clan/player switcher or editing tools. The roster shows names, Town Halls, player levels, and recorded activity. Select a member for hero, troop, spell, and pet levels; daily, weekly, and monthly loot and attack totals; army usage; and recorded CWL season averages. The current-war tab shows the real opponent, score, destruction, and war roster when the war log is public.
 
 Clan leaderboards rank the current roster by reported gold + elixir or attacks made. Dark elixir is separate in member profiles. Periods use the clan's saved time zone: calendar days, weeks beginning Monday, and calendar months. Defenses are excluded. Repeated syncs upsert the same battle instead of counting it again. Saved public battle observations live in the local D1 database under `.wrangler/state`, independently of browser journals; retain that directory to keep the history.
