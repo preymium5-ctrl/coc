@@ -4,6 +4,8 @@ import {createClient} from '@libsql/client';
 import {libsqlStorage} from '../lib/libsql-storage.mjs';
 import {migrate} from '../scripts/migrate-vercel.mjs';
 import {readMemberAttacks} from '../lib/member-attacks.mjs';
+import {rankedWindow} from '../lib/ranked-tournament.mjs';
+import {periodBounds} from '../lib/clan-analytics.mjs';
 
 test('classic and ranked histories return the newest ten attacks per mode, with opponent and exact loot details',async()=>{
   const client=createClient({url:':memory:'});
@@ -39,5 +41,22 @@ test('a zero-loot attack can be the best hit; defense and incomplete loot cannot
     assert.equal(result.highestLootAttack.id,'zero');assert.equal(result.highestLootAttack.loot,0);assert.equal(result.highestLootAttack.opponent,null);
     await db.prepare("DELETE FROM raid_battles WHERE id='zero'").run();
     assert.equal((await readMemberAttacks(db,'#P0Y',start,end)).highestLootAttack,null);
+  }finally{client.close();}
+});
+
+test('ranked history retains earlier days in its tournament while classic history follows Today',async()=>{
+  const client=createClient({url:':memory:'});
+  try{
+    await migrate(client);const db=libsqlStorage(client),now=new Date('2026-10-24T08:00:00Z');
+    const week=rankedWindow({currentLeagueSeasonId:1792386000},now),day=periodBounds('day','Asia/Singapore',now);
+    for(const [id,mode,date,attack] of [
+      ['earlier-ranked','ranked','2026-10-20T08:00:00Z',1],['today-classic','farming','2026-10-24T07:00:00Z',1],
+      ['old-classic','farming','2026-10-20T08:00:00Z',1],['before-season','ranked','2026-10-19T04:59:59Z',1],
+      ['ranked-defense','ranked','2026-10-22T08:00:00Z',0],['future','ranked','2026-10-26T05:00:00Z',1],
+    ])await db.prepare('INSERT INTO raid_battles (id,player_tag,mode,occurred_at,is_attack,data) VALUES (?,?,?,?,?,?)').bind(id,'#P0Y',mode,Date.parse(date),attack,'{}').run();
+    const classic=await readMemberAttacks(db,'#P0Y',day.start,day.end),ranked=await readMemberAttacks(db,'#P0Y',week.start,week.end);
+    assert.deepEqual(classic.attackHistory.classic.map(b=>b.id),['today-classic']);
+    assert.deepEqual(ranked.attackHistory.ranked.map(b=>b.id),['earlier-ranked']);
+    assert.equal(classic.attackHistory.ranked.length,0,'the daily filter would have hidden the completed ranked attack');
   }finally{client.close();}
 });

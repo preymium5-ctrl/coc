@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiError, normalizeTag, getPlayer, getActivity, normalizeBattles, errorResponse } from '../lib/coc-service.mjs';
+import { ApiError, normalizeTag, getPlayer, getActivity, normalizeBattles, errorResponse,coalesceBattles } from '../lib/coc-service.mjs';
 
 const config = { token: 'test-secret-never-for-clashking', baseUrl: 'https://cocproxy.royaleapi.dev/v1' };
 const tag = '#80YQJ0RQQ';
@@ -97,7 +97,7 @@ test('unavailable supplemental providers do not hide the official battle log, an
 
 test('official group trophy deltas survive a duplicate entry from the main battle log', async () => {
   const fetcher = async url => {
-    if (url.includes('/leaguegroup/')) return json({ members: [{playerTag:tag,leagueTrophies:300},{playerTag:'#9PP22RQPJ',leagueTrophies:400}], attackLogs: [{ creationTime:officialEntry.battleTimestamp,opponentName:officialEntry.opponentName,opponentPlayerTag:officialEntry.opponentPlayerTag,stars:3,destructionPercentage:100,trophies:40 }] });
+    if (url.includes('/leaguegroup/')) return json({ members: [{playerTag:tag,leagueTrophies:300},{playerTag:'#9PP22RQPJ',leagueTrophies:400}], attackLogs: [{ creationTime:'2026-10-24T06:15:30.775Z',opponentName:officialEntry.opponentName,opponentPlayerTag:officialEntry.opponentPlayerTag,stars:3,destructionPercentage:100,trophies:40 }] });
     if (url.endsWith('/battlelog')) return json([officialEntry]);
     if (url.includes('/rankings')) return json({tag,homeVillage:{globalRank:12}});
     return json({items:[]});
@@ -127,4 +127,16 @@ test('league group results remain available when the general battle feed is down
   assert.equal(data.battles.length,1);
   assert.equal(data.coverage.recent.status,'available');
   assert.equal(data.coverage.recent.message,undefined);
+});
+
+test('tournament timestamps one second apart merge without losing loot or combining distinct attacks and defenses',()=>{
+  const [original]=normalizeBattles([officialEntry],tag),later=new Date(Date.parse(original.date)+1000).toISOString();
+  const group={...original,id:'group-offset',date:later,gold:null,elixir:null,townHall:null,trophyChange:40};
+  const repeated={...original,id:'different-hit',date:new Date(Date.parse(original.date)+180000).toISOString()};
+  const defense={...group,id:'defense',type:'Defense'},different={...group,id:'different-opponent',opponentTag:'#OTHER'};
+  const result=coalesceBattles([group,original,group,repeated,defense,different]);
+  assert.equal(result.battles.length,4);assert.deepEqual(result.duplicateIds,['group-offset']);
+  const saved=result.battles.find(b=>b.id===original.id);
+  assert.equal(saved.gold,1000000);assert.equal(saved.townHall,18);assert.equal(saved.trophyChange,40);
+  assert.equal(coalesceBattles([{...original,opponentTag:null},original,group]).battles.length,1,'newly supplied opponent tags also identify later duplicates');
 });

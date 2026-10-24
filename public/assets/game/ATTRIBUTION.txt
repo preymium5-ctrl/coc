@@ -15,6 +15,11 @@ interface/shield.png: https://assets.clashk.ing/bot/icons/shield.png
 interface/chest.webp: https://assets.clashk.ing/chests/chest.webp
 The Raidroom favicon embeds the crossed-swords artwork in a blue frame.
 
+Ranked league badges (all current tiers and Unranked):
+https://assets.clashk.ing/leagues/league-tier/
+Gold Pass icon: https://assets.clashk.ing/icons/Icon_HV_Gold_Pass.png
+Cosmic Scenery: https://assets.clashk.ing/sceneries/cosmic_scenery/thumbnail.webp
+
 Supercell Fan Content Policy:
 https://supercell.com/en/fan-content-policy/
 

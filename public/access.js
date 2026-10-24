@@ -36,11 +36,24 @@ function publicDestinations(){
   ];
   return '<div class="public-destinations">'+destinations.map(([id,art,title,description])=>`<a class="panel public-destination" href="#${id}"><span class="destination-art" aria-hidden="true"><img src="./assets/game/${art}" alt="" width="104" height="104" decoding="async" loading="lazy"></span><h2>${title}</h2><p>${description}</p><span class="destination-link">Explore ${icon('arrow-right')}</span></a>`).join('')+'</div>';
 }
+function publicGiveaways(standalone=false){
+  const heading=standalone?'h1':'h2';
+  const rounds=[
+    {title:'2 Cosmic Sceneries',art:'cosmic_scenery.webp',winners:[['Paengski','claimed'],['James Ruper','claimed']]},
+    {title:'3 Gold Passes',art:'gold_pass.png',winners:[['Waks','waiting'],['Pending','pending'],['Pending','pending']]},
+  ];
+  const events=[
+    {month:'NOV',days:'01',start:'2026-11-01',end:null,title:'2 Gold Pass giveaway',copy:'Two Gold Passes for the clan.',art:'gold_pass.png'},
+    {month:'DEC',days:'22–23',start:'2026-12-22',end:'2026-12-23',title:'Tournament',copy:'Two days of clan competition.',art:'wood_swords.png'},
+    {month:'DEC',days:'24–25',start:'2026-12-24',end:'2026-12-25',title:'Most loot in a day',copy:'The member with the most loot in a day wins a Gold Pass.',art:'gold_pass.png'},
+  ];
+  return `<section class="giveaway-section" aria-labelledby="giveaway-heading"><div class="giveaway-section-heading"><div><p class="eyebrow">FOR THE CLAN. FROM THE CLAN.</p><${heading} id="giveaway-heading">Giveaway winners</${heading}><p>Celebrating our winners, with more to look forward to.</p></div><span class="giveaway-season">CLAN REWARDS · 2026</span></div><div class="giveaway-layout"><div class="giveaway-rounds">${rounds.map(round=>`<section class="panel giveaway-round"><div class="giveaway-prize ${round.art==='cosmic_scenery.webp'?'scenery-prize':'pass-prize'}"><img src="./assets/game/interface/${round.art}" alt="${round.art==='cosmic_scenery.webp'?'Cosmic Scenery':'Gold Pass'}" loading="lazy"><div><span class="eyebrow">CURRENT WINNERS</span><h3>${round.title}</h3></div></div><ul class="giveaway-winners">${round.winners.map(([name,status],index)=>`<li><span class="giveaway-winner-number">${String(index+1).padStart(2,'0')}</span><div><strong>${name}</strong><small>${status==='pending'?'Winner to be announced':status==='claimed'?'Prize received':'Awaiting claim'}</small></div><span class="prize-status ${status}">${icon(status==='claimed'?'check':status==='waiting'?'clock':'compass')}${{claimed:'Claimed',waiting:'Waiting',pending:'Pending'}[status]}</span></li>`).join('')}</ul></section>`).join('')}</div><section class="panel giveaway-calendar"><div class="giveaway-calendar-heading"><span class="eyebrow">MARK YOUR CALENDAR</span><h3>Upcoming giveaways & events</h3></div><ol>${events.map(event=>`<li><div class="giveaway-date"><span>${event.month}</span><strong>${event.days}</strong></div><div class="giveaway-event"><h4>${event.title}</h4><p>${event.copy}</p><small><time datetime="${event.start}">${event.month==='NOV'?'November':'December'} ${event.days}</time> · 2026</small></div><img src="./assets/game/interface/${event.art}" alt="" width="36" height="36" loading="lazy"></li>`).join('')}</ol></section></div></section>`;
+}
 function publicOverview(){
   if(!siteAccess.clan)return siteEmpty();
   const clan=clanData||siteAccess.clan,rows=clanTodayBoard?.members||[],known=rows.filter(row=>isKnown(row.loot)),attacks=rows.filter(row=>isKnown(row.attacks));
   const top=[...known].filter(row=>row.loot>0).sort((a,b)=>b.loot-a.loot).slice(0,3);
-  return `<section class="public-feature"><img src="./assets/clash-official-banner.jpg" alt="Clash of Clans Electro Dragon and troops" fetchpriority="high"><div><p class="eyebrow">ONE CLAN. EVERY CONTRIBUTION.</p><h1>${esc(clan.name)}.<br><em>Every victory.</em></h1><p>Your members. Your highest loots.<br>Your current war, all in one place.</p><a class="button button-lime" href="#clan">Meet the clan ${icon('arrow-up-right')}</a></div><span class="public-art-credit">ART © SUPERCELL</span></section>${publishedClanCard()}${renderAutoSyncStatus()}${clanError?`<p class="sync-notice" role="alert">${esc(clanError)}</p>`:''}<div class="clan-stat-grid">${clanSummaryCard('Members',clanData?number(clanData.members):'—','users')}${clanSummaryCard('Reported loot today',known.length?compact(known.reduce((sum,row)=>sum+row.loot,0)):'—','coins')}${clanSummaryCard('Recorded attacks today',attacks.length?number(attacks.reduce((sum,row)=>sum+row.attacks,0)):'—','swords')}</div>${publicDestinations()}${top.length?`<div class="section-topline public-top-heading"><h2>Today’s biggest contributors.</h2><a class="text-link" href="#leaderboard">View rankings ${icon('arrow-right')}</a></div><div class="clan-podium">${top.map(row=>`<button class="panel clan-podium-card" data-clan-member="${esc(row.tag)}">${clanTownHallArt(row.townHallLevel)}<h3>${esc(row.name)}</h3><strong>${compact(row.loot)}</strong><small>reported gold + elixir today</small></button>`).join('')}</div>`:''}<p class="clan-coverage">${icon('info')}Totals reflect available recorded attacks in ${esc(clanTimeZone)}. Provider history may be incomplete. Select a member to see unit levels, recorded troop usage, and CWL averages.</p>`;
+  return `<section class="public-feature"><img src="./assets/clash-official-banner.jpg" alt="Clash of Clans Electro Dragon and troops" fetchpriority="high"><div><p class="eyebrow">ONE CLAN. EVERY CONTRIBUTION.</p><h1>${esc(clan.name)}.<br><em>Every victory.</em></h1><p>Your members. Your highest loots.<br>Your current war, all in one place.</p><a class="button button-lime" href="#clan">Meet the clan ${icon('arrow-up-right')}</a></div><span class="public-art-credit">ART © SUPERCELL</span></section>${publishedClanCard()}${renderAutoSyncStatus()}${clanError?`<p class="sync-notice" role="alert">${esc(clanError)}</p>`:''}<div class="clan-stat-grid">${clanSummaryCard('Members',clanData?number(clanData.members):'—','users')}${clanSummaryCard('Reported loot today',known.length?compact(known.reduce((sum,row)=>sum+row.loot,0)):'—','coins')}${clanSummaryCard('Recorded attacks today',attacks.length?number(attacks.reduce((sum,row)=>sum+row.attacks,0)):'—','swords')}</div>${publicDestinations()}${publicGiveaways()}${top.length?`<div class="section-topline public-top-heading"><h2>Today’s biggest contributors.</h2><a class="text-link" href="#leaderboard">View rankings ${icon('arrow-right')}</a></div><div class="clan-podium">${top.map(row=>`<button class="panel clan-podium-card" data-clan-member="${esc(row.tag)}">${clanTownHallArt(row.townHallLevel)}<h3>${esc(row.name)}</h3><strong>${compact(row.loot)}</strong><small>reported gold + elixir today</small></button>`).join('')}</div>`:''}<p class="clan-coverage">${icon('info')}Totals reflect available recorded attacks in ${esc(clanTimeZone)}. Provider history may be incomplete. Select a member to see unit levels, recorded troop usage, and CWL averages.</p>`;
 }
 function syncAccessShell(){
   if(siteAccess.adminPage&&siteAccess.admin&&view==='overview')updateSidebar();
@@ -49,10 +62,10 @@ function syncAccessShell(){
   document.body.classList.remove('access-loading');
   if(!siteAccess.adminPage){
     $('.sidebar-label').textContent='YOUR CLAN DASHBOARD';
-    if(!$('.main-nav').hasAttribute('data-public-nav')){$('.main-nav').setAttribute('data-public-nav','');$('.main-nav').innerHTML=[['overview','grid','Overview'],['clan','users','Members'],['leaderboard','trophy','Clan rankings'],['war','swords','Current war']].map(([id,ico,label])=>`<a class="nav-link" data-public-view="${id}" href="#${id}" aria-label="${label}" title="${label}">${gameIcon(ico)}${label}</a>`).join('');}
+    if(!$('.main-nav').hasAttribute('data-public-nav')){$('.main-nav').setAttribute('data-public-nav','');$('.main-nav').innerHTML=[['overview','grid','Overview'],['clan','users','Members'],['leaderboard','trophy','Clan rankings'],['war','swords','Current war'],['giveaways','gift','Giveaways']].map(([id,ico,label])=>`<a class="nav-link" data-public-view="${id}" href="#${id}" aria-label="${label}" title="${label}">${gameIcon(ico)}${label}</a>`).join('');}
     $$('[data-public-view]').forEach(a=>{a.classList.toggle('active',a.dataset.publicView===view);if(a.dataset.publicView===view)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
   }
-  const label=siteAccess.adminPage?(siteAccess.admin?'Admin workspace':'Admin sign in'):{overview:'Overview',clan:'Members',leaderboard:'Clan rankings',war:'Current war'}[view]||'Overview';
+  const label=siteAccess.adminPage?(siteAccess.admin?'Admin workspace':'Admin sign in'):{overview:'Overview',clan:'Members',leaderboard:'Clan rankings',war:'Current war',giveaways:'Giveaways'}[view]||'Overview';
   $('#breadcrumb-title').textContent=label;
   let context=$('#site-access-context');
   if(!context){context=document.createElement('div');context.id='site-access-context';$('.topbar-actions').prepend(context);}
@@ -70,11 +83,13 @@ render=function(){
   if(siteAccess.adminPage){
     if(!siteAccess.admin)$('#main-content').innerHTML=adminLogin();
     else if(view==='overview')$('#main-content').innerHTML=adminOverview();
+    else if(view==='giveaways')$('#main-content').innerHTML=publicGiveaways(true);
     else privateWorkspaceRender();
   }else{
-    if(!['overview','clan','leaderboard','war'].includes(view))view='overview';
+    if(!['overview','clan','leaderboard','war','giveaways'].includes(view))view='overview';
     if(view!=='clan'){selectedMember=null;memberDetails=null;}
     if(view==='overview')$('#main-content').innerHTML=publicOverview();
+    else if(view==='giveaways')$('#main-content').innerHTML=publicGiveaways(true);
     else{clanTab={clan:'roster',leaderboard:'leaderboard',war:'war'}[view];$('#main-content').innerHTML=siteAccess.clan?renderClan():siteEmpty();}
   }
   syncAccessShell();

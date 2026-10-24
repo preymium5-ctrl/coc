@@ -119,6 +119,14 @@
 .member-th>span { display:block; font-size:10px; font-weight:700; color:#9eacc0; margin-top:10px; }
 .member-profile-hero h1 { font-size:30px; margin:9px 0; letter-spacing:-.8px; }
 .member-profile-hero p { color:#8391a9; font-size:11px; margin:0 0 15px; }
+.member-league-badge { display:inline-flex; align-items:center; gap:10px; padding:7px 14px 7px 8px; background:linear-gradient(135deg,#f3f7ff,#fff); border:1px solid #e0e9f7; border-radius:10px; }
+.member-league-badge .league-art { width:48px; height:48px; }
+.member-league-badge small { display:block; font-size:7px; color:#8295b4; letter-spacing:1.1px; margin-bottom:5px; }
+.member-league-badge strong { display:block; font-size:13px; color:#264775; font-weight:700; }
+.ranked-tournament-note { display:flex; align-items:center; gap:9px; background:#f2f7ff; border-bottom:1px solid #e2ebfa; padding:14px 21px; color:#4775bb; }
+.ranked-tournament-note>svg { width:15px; height:15px; flex-shrink:0; }
+.ranked-tournament-note strong { display:block; font-size:10px; font-weight:650; }
+.ranked-tournament-note small { display:block; font-size:9px; margin-top:5px; color:#7189ab; line-height:1.6; }
 .member-profile-trophies { margin-left:auto; padding-left:35px; border-left:1px solid #edf1f6; }
 .member-profile-trophies small { display:block; color:#97a5ba; font-size:10px; }
 .member-profile-trophies strong { display:block; font-size:30px; letter-spacing:-1px; color:#2f6bd1; margin:10px 0; }

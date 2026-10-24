@@ -1,6 +1,7 @@
-import {ApiError,configuration,normalizeTag,getPlayer,officialGet,communityGet,normalizeBattles,mergeBattle} from './coc-service.mjs';
+import {ApiError,configuration,normalizeTag,getPlayer,officialGet,communityGet,normalizeBattles,mergeBattle,coalesceBattles} from './coc-service.mjs';
 import {periodBounds,collectionStart,decorateProfile,troopUsage,cwlAverages,orientWar} from './clan-analytics.mjs';
-import {cached,playerBattles,saveBattles,syncInfo,clanTotals,memberAttacks} from './clan-store';
+import {cached,playerBattles,savedBattlesById,savedRankedBattles,saveBattles,syncInfo,clanTotals,memberAttacks} from './clan-store';
+import {rankedWindow,fetchRankedTournament} from './ranked-tournament.mjs';
 
 export async function getPublicProfile(input:string){const tag=normalizeTag(input);return cached('profile:'+tag,async()=>decorateProfile(await getPlayer(tag)),90);}
 export async function getClan(input:string){
@@ -11,31 +12,36 @@ export async function getClan(input:string){
     return {...clan,memberList:clan.memberList.map((m:{tag:string;townHallLevel?:number;townhallLevel?:number})=>({...m,townHallLevel:m.townHallLevel??m.townhallLevel??null}))};
   },60);
 }
-async function collectPlayer(tag:string,timeZone:string){
-  const after=collectionStart(timeZone),saved=await syncInfo(tag);
-  if(saved&&Date.now()-saved.synced_at<45000&&JSON.parse(saved.coverage).windowStart<=after)return {tag,coverage:JSON.parse(saved.coverage),cached:true};
-  const result=await cached('combat:'+tag+':'+after,async()=>{
-    const [recent,history]=await Promise.allSettled([
+async function collectPlayer(tag:string,timeZone:string,knownProfile?:any){
+  const baseAfter=collectionStart(timeZone),saved=await syncInfo(tag),prior=saved?JSON.parse(saved.coverage):null;
+  if(saved&&Date.now()-saved.synced_at<45000&&prior.ranked&&prior.windowStart<=baseAfter)return {tag,coverage:prior,cached:true};
+  const profile=knownProfile||await getPublicProfile(tag).catch(()=>null),window=rankedWindow(profile);
+  const after=new Date(Math.min(Date.parse(baseAfter),Date.parse(window.start))).toISOString();
+  const result=await cached('combat:v2:'+tag+':'+after,async()=>{
+    const [recent,history,tournament]=await Promise.allSettled([
       officialGet('/players/'+encodeURIComponent(tag)+'/battlelog',configuration(),undefined),
       communityGet('/player/'+encodeURIComponent(tag)+'/battlelog/history?time%5Bafter%5D='+encodeURIComponent(after),undefined),
+      fetchRankedTournament(profile),
     ]);
     const byId=new Map();
     if(history.status==='fulfilled')for(const b of normalizeBattles(history.value,tag,'clashking'))byId.set(b.id,b);
+    if(tournament.status==='fulfilled')for(const b of tournament.value.battles)byId.set(b.id,mergeBattle(byId.get(b.id),b));
     if(recent.status==='fulfilled')for(const b of normalizeBattles(recent.value,tag,'official'))byId.set(b.id,mergeBattle(byId.get(b.id),b));
     const length=(value:{items?:unknown[]}|unknown[])=>Array.isArray(value)?value.length:Array.isArray(value?.items)?value.items.length:0;
-    return {battles:[...byId.values()],coverage:{available:recent.status==='fulfilled'||history.status==='fulfilled',official:recent.status==='fulfilled'?'available':'unavailable',history:history.status==='fulfilled'?'available':'unavailable',windowStart:after,truncated:recent.status==='fulfilled'&&length(recent.value)>1000||history.status==='fulfilled'&&length(history.value)>1000}};
+    const ranked=tournament.status==='fulfilled'?(({battles,...metadata})=>metadata)(tournament.value):{status:'unavailable',window};
+    return {battles:[...byId.values()],coverage:{available:recent.status==='fulfilled'||history.status==='fulfilled'||ranked.status==='available',official:recent.status==='fulfilled'?'available':'unavailable',history:history.status==='fulfilled'?'available':'unavailable',ranked,windowStart:after,truncated:recent.status==='fulfilled'&&length(recent.value)>1000||history.status==='fulfilled'&&length(history.value)>1000}};
   },45);
-  const previous=await playerBattles(tag,after),existing=new Map(previous.map(b=>[b.id,b]));
-  const merged=result.battles.map(b=>mergeBattle(existing.get(b.id),b));
-  await saveBattles(tag,merged,result.coverage);
-  return {tag,coverage:result.coverage,records:merged.length};
+  const [previous,rankedSaved]=await Promise.all([savedBattlesById(tag,result.battles.map(b=>b.id)),savedRankedBattles(tag,window.start,window.end)]);
+  const merged=coalesceBattles([...previous,...rankedSaved,...result.battles]);
+  await saveBattles(tag,merged.battles,result.coverage,merged.duplicateIds);
+  return {tag,coverage:result.coverage,records:merged.battles.length};
 }
 function bounds(period:string,timeZone:string){try{return periodBounds(period,timeZone);}catch{throw new ApiError(400,'invalid_period','Choose a valid period and time zone.');}}
 export async function getClanLeaderboard(input:string,period='day',timeZone='Asia/Singapore'){
-  const window=bounds(period,timeZone),clan=await getClan(input);
-  const totals=await clanTotals(clan.memberList.map((m:{tag:string})=>m.tag),window.start,window.end);
-  const members=clan.memberList.map((member:{tag:string})=>({...member,...totals.find(row=>row.tag===member.tag)}));
-  return {clanTag:clan.tag,clanName:clan.name,window,members,fetchedAt:new Date().toISOString(),synced:members.filter((m:{available?:boolean})=>m.available).length,total:members.length};
+  const window=bounds(period,timeZone),clan=await getClan(input),rankedWeek=rankedWindow(),tags=clan.memberList.map((m:{tag:string})=>m.tag);
+  const [totals,weekly]=await Promise.all([clanTotals(tags,window.start,window.end),clanTotals(tags,rankedWeek.start,rankedWeek.end)]);
+  const members=clan.memberList.map((member:{tag:string})=>({...member,...totals.find(row=>row.tag===member.tag),rankedAttacks:weekly.find(row=>row.tag===member.tag)?.rankedAttacks??null}));
+  return {clanTag:clan.tag,clanName:clan.name,window,rankedWindow:rankedWeek,members,fetchedAt:new Date().toISOString(),synced:members.filter((m:{available?:boolean})=>m.available).length,total:members.length};
 }
 export async function syncClanMembers(input:string,tags:unknown,timeZone='Asia/Singapore'){
   bounds('month',timeZone);
@@ -48,14 +54,17 @@ export async function syncClanMembers(input:string,tags:unknown,timeZone='Asia/S
 }
 export async function getMemberDetails(input:string,timeZone='Asia/Singapore'){
   const tag=normalizeTag(input);bounds('month',timeZone);
-  const [profile,sync,cwl]=await Promise.all([
-    getPublicProfile(tag),collectPlayer(tag,timeZone),
+  const profile=await getPublicProfile(tag);
+  const [sync,cwl]=await Promise.all([
+    collectPlayer(tag,timeZone,profile),
     cached('cwl-player:'+tag,()=>communityGet('/player/'+encodeURIComponent(tag)+'/cwl/history?limit=12',undefined),300).then(data=>({status:'available',items:cwlAverages(data)})).catch(()=>({status:'unavailable',items:[]})),
   ]);
   const battles=await playerBattles(tag,collectionStart(timeZone));
   const month=periodBounds('month',timeZone),current=battles.filter(b=>new Date(b.date)>=new Date(month.start));
   const periods=Object.fromEntries(await Promise.all(['day','week','month'].map(async period=>{const window=periodBounds(period,timeZone),[rows,attacks]=await Promise.all([clanTotals([tag],window.start,window.end),memberAttacks(tag,window.start,window.end)]);return [period,{...rows[0],window,...attacks}];})));
-  return {profile,periods,coverage:sync.coverage,usage:{classic:troopUsage(current,'classic'),war:troopUsage(current,'war'),limited:battles.length===3000},cwl,timeZone,fetchedAt:new Date().toISOString()};
+  const window=rankedWindow(profile),[rankedRows,rankedHistory]=await Promise.all([clanTotals([tag],window.start,window.end),memberAttacks(tag,window.start,window.end)]);
+  const ranked={...rankedRows[0],window,attackHistory:{ranked:rankedHistory.attackHistory.ranked},tournament:sync.coverage.ranked};
+  return {profile,periods,ranked,coverage:sync.coverage,usage:{classic:troopUsage(current,'classic'),war:troopUsage(current,'war'),limited:battles.length===3000},cwl,timeZone,fetchedAt:new Date().toISOString()};
 }
 type War={state?:string;clan?:{tag?:string};opponent?:{tag?:string};startTime?:string;[key:string]:unknown};
 export async function getCurrentClanWar(input:string){

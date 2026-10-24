@@ -181,7 +181,7 @@ async function syncActivity(tag,sequence=++liveSyncSequence){
   liveSyncing=true;render();
   try{
     const query=new URLSearchParams();
-    if(state.player.currentLeagueGroupTag&&state.player.currentLeagueSeasonId){query.set('group',state.player.currentLeagueGroupTag);query.set('season',state.player.currentLeagueSeasonId);query.set('mode',/legend/i.test(state.player.leagueTier?.name||state.player.league?.name||'')?'legend':'ranked');}
+    if(state.player.currentLeagueGroupTag&&state.player.currentLeagueSeasonId){query.set('group',state.player.currentLeagueGroupTag);query.set('season',state.player.currentLeagueSeasonId);query.set('mode',/^Legend(?: League)?(?: I| 1)?$/i.test(state.player.leagueTier?.name||state.player.league?.name||'')?'legend':'ranked');}
     const activity=await siteJSON('/api/players/'+encodeURIComponent(tag)+'/activity'+(query.size?'?'+query:''));
     if(sequence!==liveSyncSequence||state.player.tag!==tag||state.source!=='live')return;
     const records=new Map(state.battles.map(b=>[b.id,b]));
