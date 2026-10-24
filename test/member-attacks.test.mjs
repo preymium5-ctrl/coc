@@ -7,6 +7,24 @@ import {readMemberAttacks} from '../lib/member-attacks.mjs';
 import {rankedWindow} from '../lib/ranked-tournament.mjs';
 import {periodBounds} from '../lib/clan-analytics.mjs';
 
+test('ranked histories expand to the league allowance and retain full Legend I tournament logs; classic stays at ten',async()=>{
+  const client=createClient({url:':memory:'});
+  try{
+    await migrate(client);const db=libsqlStorage(client),tag='#P0Y',start='2026-10-19T05:00:00Z',end='2026-10-26T04:59:59Z',at=Date.parse(start);
+    for(let i=0;i<40;i++)for(const mode of ['farming','ranked'])await db.prepare('INSERT INTO raid_battles (id,player_tag,mode,occurred_at,is_attack,data) VALUES (?,?,?,?,?,?)').bind(mode+':'+i,tag,mode,at+i*3600000,1,'{}').run();
+    await db.prepare('INSERT INTO raid_battles (id,player_tag,mode,occurred_at,is_attack,data) VALUES (?,?,?,?,?,?)').bind('defense',tag,'ranked',at+41*3600000,0,'{}').run();
+    for(const limit of [6,8,10,12,14,18,24,30]){
+      const result=await readMemberAttacks(db,tag,start,end,{rankedLimit:limit});
+      assert.equal(result.attackHistory.ranked.length,limit);assert.equal(result.attackHistory.classic.length,10);
+      assert.equal(result.attackHistory.ranked[0].id,'ranked:39');
+      assert.equal(result.attackHistory.ranked.at(-1).id,'ranked:'+(40-limit));
+    }
+    assert.equal((await readMemberAttacks(db,tag,start,end,{rankedLimit:null})).attackHistory.ranked.length,40,'full tournament history includes earlier league days');
+    await assert.rejects(readMemberAttacks(db,tag,start,end,{rankedLimit:0}),RangeError);
+    await assert.rejects(readMemberAttacks(db,tag,start,end,{rankedLimit:NaN}),RangeError);
+  }finally{client.close();}
+});
+
 test('classic and ranked histories return the newest ten attacks per mode, with opponent and exact loot details',async()=>{
   const client=createClient({url:':memory:'});
   try{

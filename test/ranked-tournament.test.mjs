@@ -1,6 +1,44 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {rankedWindow,rankedGroupMode,fetchRankedTournament} from '../lib/ranked-tournament.mjs';
+import {rankedWindow,rankedGroupMode,rankedAttackAllowance,rankedAttackWindow,rankedAttackProgress,fetchRankedTournament} from '../lib/ranked-tournament.mjs';
+
+test('ranked attack allowances follow every current league tier instead of a ten-log cap',()=>{
+  const groups=[['Skeleton',1,3,6],['Barbarian',4,6,6],['Archer',7,9,8],['Wizard',10,12,8],
+    ['Valkyrie',13,15,10],['Witch',16,18,10],['Golem',19,21,12],['P.E.K.K.A',22,24,12],
+    ['Titan',25,27,12],['Dragon',28,30,14],['Electro',31,33,18]];
+  for(const [name,start,end,attacks] of groups)for(let tier=start;tier<=end;tier++){
+    const league=`${name} ${tier}`;
+    assert.deepEqual(rankedAttackAllowance({leagueTier:{name:league}}),{league,attacks,period:'week'});
+  }
+  for(const [league,attacks,period] of [['Legend III',24,'week'],['Legend II',30,'week'],['Legend I',8,'day']]){
+    assert.deepEqual(rankedAttackAllowance({leagueTier:{name:league}}),{league,attacks,period});
+  }
+  assert.equal(rankedAttackAllowance({league:{name:'Titan I'}}),null,'legacy leagues must not be mistaken for the current ranked tiers');
+  assert.equal(rankedAttackAllowance({leagueTier:{name:'Future league'}}),null);
+  assert.equal(rankedAttackAllowance(null),null);
+});
+
+test('weekly progress uses official completion, independently of the number of detailed logs saved',()=>{
+  const now=new Date('2026-10-24T08:00:00Z'),profile={currentLeagueSeasonId:1792386000,leagueTier:{name:'Legend III'}};
+  const tournament={status:'available',window:rankedWindow(profile,now),completedAttacks:21};
+  const progress=rankedAttackProgress(profile,tournament,10,now);
+  assert.equal(progress.completedAttacks,21);assert.equal(progress.attacks,24);assert.equal(progress.source,'official');
+  assert.equal(rankedAttackProgress(profile,{...tournament,completedAttacks:0},null,now).completedAttacks,0);
+  assert.equal(rankedAttackProgress(profile,{...tournament,window:{start:'2026-10-12T05:00:00Z'}},4,now).completedAttacks,4,'do not use completion from a different tournament');
+  assert.equal(rankedAttackProgress(profile,{status:'unavailable'},4,now).source,'recorded');
+  assert.equal(rankedAttackProgress(profile,{status:'unavailable'},null,now).completedAttacks,null,'unavailable is not zero');
+  assert.equal(rankedAttackProgress({},tournament,10,now),null);
+});
+
+test('Legend I progress uses its eight-attack league day while its history retains the full tournament window',()=>{
+  const profile={currentLeagueSeasonId:1792386000,leagueTier:{name:'Legend I'}},now=new Date('2026-10-24T08:00:00Z');
+  const window=rankedAttackWindow(profile,now);
+  assert.equal(window.start,'2026-10-24T05:00:00.000Z');assert.equal(window.resetAt,'2026-10-25T05:00:00.000Z');
+  assert.equal(rankedAttackWindow(profile,new Date('2026-10-24T04:59:59Z')).start,'2026-10-23T05:00:00.000Z');
+  const progress=rankedAttackProgress(profile,{status:'available',window:rankedWindow(profile,now),completedAttacks:50},3,now);
+  assert.equal(progress.completedAttacks,3);assert.equal(progress.attacks,8);assert.equal(progress.source,'recorded');
+  assert.equal(rankedWindow(profile,now).start,'2026-10-19T05:00:00.000Z','the daily counter must not reset the tournament history');
+});
 
 test('ranked weeks reset at Monday 05:00 UTC and do not reset at local midnight',()=>{
   const before=rankedWindow({},new Date('2026-10-19T04:59:59Z'));

@@ -37,4 +37,4 @@ export async function syncInfo(tag:string){return database().prepare('SELECT syn
 export async function clanTotals(tags:string[],start:string,end:string){
   return readClanTotals(database(),tags,start,end);
 }
-export async function memberAttacks(tag:string,start:string,end:string){return readMemberAttacks(database(),tag,start,end);}
+export async function memberAttacks(tag:string,start:string,end:string,options:{rankedLimit?:number|null}={}){return readMemberAttacks(database(),tag,start,end,options);}

@@ -1,7 +1,7 @@
 import {ApiError,configuration,normalizeTag,getPlayer,officialGet,communityGet,normalizeBattles,mergeBattle,coalesceBattles} from './coc-service.mjs';
 import {periodBounds,collectionStart,decorateProfile,troopUsage,cwlAverages,orientWar} from './clan-analytics.mjs';
 import {cached,playerBattles,savedBattlesById,savedRankedBattles,saveBattles,syncInfo,clanTotals,memberAttacks} from './clan-store';
-import {rankedWindow,fetchRankedTournament} from './ranked-tournament.mjs';
+import {rankedWindow,rankedAttackAllowance,rankedAttackWindow,rankedAttackProgress,fetchRankedTournament} from './ranked-tournament.mjs';
 import {capitalRaidSummary} from './clan-events.mjs';
 import {observeClanGames,readClanGames,verifyClanGamesScore} from './clan-games';
 
@@ -65,8 +65,14 @@ export async function getMemberDetails(input:string,timeZone='Asia/Singapore'){
   const battles=await playerBattles(tag,collectionStart(timeZone));
   const month=periodBounds('month',timeZone),current=battles.filter(b=>new Date(b.date)>=new Date(month.start));
   const periods=Object.fromEntries(await Promise.all(['day','week','month'].map(async period=>{const window=periodBounds(period,timeZone),[rows,attacks]=await Promise.all([clanTotals([tag],window.start,window.end),memberAttacks(tag,window.start,window.end)]);return [period,{...rows[0],window,...attacks}];})));
-  const window=rankedWindow(profile),[rankedRows,rankedHistory]=await Promise.all([clanTotals([tag],window.start,window.end),memberAttacks(tag,window.start,window.end)]);
-  const ranked={...rankedRows[0],window,attackHistory:{ranked:rankedHistory.attackHistory.ranked},tournament:sync.coverage.ranked};
+  const now=new Date(),window=rankedWindow(profile,now),allowance=rankedAttackAllowance(profile),attackWindow=rankedAttackWindow(profile,now);
+  const [rankedRows,rankedHistory,dailyRows]=await Promise.all([
+    clanTotals([tag],window.start,window.end),
+    memberAttacks(tag,window.start,window.end,{rankedLimit:allowance?.period==='week'?allowance.attacks:null}),
+    allowance?.period==='day'?clanTotals([tag],attackWindow.start,attackWindow.end):Promise.resolve(null),
+  ]);
+  const progress=rankedAttackProgress(profile,sync.coverage.ranked,(dailyRows||rankedRows)[0]?.rankedAttacks,now);
+  const ranked={...rankedRows[0],window,progress,attackHistory:{ranked:rankedHistory.attackHistory.ranked},tournament:sync.coverage.ranked};
   return {profile,periods,ranked,coverage:sync.coverage,usage:{classic:troopUsage(current,'classic'),war:troopUsage(current,'war'),limited:battles.length===3000},cwl,timeZone,fetchedAt:new Date().toISOString()};
 }
 
