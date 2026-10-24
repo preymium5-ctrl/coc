@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "check": "node --check public/app.js && node --check public/connect.js && tsc --noEmit && npm test",
+    "check": "node --check public/records.js && node --check public/app.js && node --check public/connect.js && tsc --noEmit && npm test",
     "install:ci": "node scripts/install-ci.mjs",
     "dev": "node scripts/run-framework.mjs dev",
     "build": "node scripts/run-framework.mjs build",

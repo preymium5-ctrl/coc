@@ -12,7 +12,7 @@ Copy `.env.example` to `.env`. Create a free developer key at <https://developer
 
 Entering a player tag fetches the public Supercell profile through the Site's server. Raidroom detects the name, experience level, Town Hall, trophies, league, clan, troop levels, spell levels, heroes, and equipment. Refresh reloads the profile and activity; an open tab refreshes every five minutes.
 
-Recent battle results and league groups come from the official API. ClashKing supplements recorded history and global/country rankings. Each result identifies its source. Missing values remain unknown, and provider outages show coverage messages without replacing real records with samples. No complete historical feed is guaranteed; older battles depend on provider coverage and records retained in this browser.
+Recent battle results and league groups come from the official API. ClashKing supplements recorded history and global/country rankings. Each result identifies its source. Missing values remain unknown, and provider outages show coverage messages without fabricating records. No complete historical feed is guaranteed; older battles depend on provider coverage and records retained in this browser.
 
 The Ranked battles page lists reported ranked and Legend attacks/defenses, current group placement where available, and reported season history. A null ranking means the player is not listed; unavailable rankings are labeled separately. Personal daily/weekly/all-time loot rankings use reported gold and elixir from attacks in this browser, not a global loot leaderboard.
 
@@ -22,7 +22,7 @@ API credentials stay server-side. Only the official API/proxy receives the Beare
 
 Personal journals, trophy snapshots, and fetched battles use localStorage. Uploaded videos use IndexedDB; saved YouTube recordings can also play in the website. Playable in-game replays are not returned as video by the API. Export a JSON backup before clearing browser data or switching devices; video files need separate backups. Starting another village offers an export before replacing the current journal.
 
-The initial sample village is clearly labeled. Connecting a real player clears sample records. Manual logging and official profile JSON import remain available.
+New visitors start with no player or battle records. Existing sample villages and marked sample battles are removed automatically from browser storage; genuine records and personal recordings are preserved. Manual logging and official profile JSON import remain available.
 
 ## Structure and deployment
 

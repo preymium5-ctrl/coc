@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;450;500;550;600;650;700;750;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./theme.css">
+  <script src="./records.js" defer></script>
   <script src="./app.js" defer></script>
   <script src="./connect.js" defer></script>
 </head>
@@ -22,7 +23,7 @@
     <span class="sidebar-label">YOUR COMMAND CENTER</span>
     <nav class="main-nav" aria-label="Main navigation">
       <a href="#overview" class="nav-link active" data-view="overview"><span data-icon="grid"></span>Overview<span class="active-dot"></span></a>
-      <a href="#battles" class="nav-link" data-view="battles"><span data-icon="swords"></span>Battle log<span class="nav-count" id="battle-count">12</span></a>
+      <a href="#battles" class="nav-link" data-view="battles"><span data-icon="swords"></span>Battle log<span class="nav-count" id="battle-count">0</span></a>
       <a href="#village" class="nav-link" data-view="village"><span data-icon="castle"></span>My village</a>
       <a href="#leaderboard" class="nav-link" data-view="leaderboard"><span data-icon="trophy"></span>Loot leaderboard</a>
       <a href="#replays" class="nav-link" data-view="replays"><span data-icon="play-square"></span>Replay library</a>
@@ -33,13 +34,13 @@
     <button class="nav-link" id="export-side"><span data-icon="download"></span>Export my records</button>
     <div class="sidebar-bottom">
       <div class="tracking-card"><span class="tiny-icon" data-icon="compass"></span><h3>A little more legendary.</h3><p>Every raid tells a story.<br>Start keeping yours.</p><button class="button button-lime" id="start-tracking">Track my village <span data-icon="arrow-up-right"></span></button></div>
-      <button class="sidebar-profile" id="profile-button"><span class="avatar avatar-moss">R</span><span><strong id="sidebar-player-name">Rockz</strong><small id="sidebar-source">Exploring demo village</small></span><span data-icon="chevrons-up-down"></span></button>
+      <button class="sidebar-profile" id="profile-button"><span class="avatar avatar-moss">+</span><span><strong id="sidebar-player-name">Connect your village</strong><small id="sidebar-source">No player connected</small></span><span data-icon="chevrons-up-down"></span></button>
     </div>
   </aside>
   <div class="app-shell">
     <header class="topbar">
       <div class="topbar-left"><button class="icon-button mobile-menu" id="mobile-menu" aria-label="Open navigation" aria-expanded="false"><span data-icon="menu"></span></button><span class="breadcrumb">Command center <span>/</span> <strong id="breadcrumb-title">Overview</strong></span></div>
-      <div class="topbar-actions"><button class="player-search" id="player-search" aria-label="Find your player tag"><span data-icon="search"></span><span>Find your player tag...</span><kbd>/</kbd></button><button class="icon-button help-button" id="help-button" aria-label="About Raidroom"><span data-icon="help-circle"></span></button><span class="topbar-divider"></span><button class="avatar avatar-small" id="top-profile" aria-label="Open your player profile">R</button></div>
+      <div class="topbar-actions"><button class="player-search" id="player-search" aria-label="Find your player tag"><span data-icon="search"></span><span>Find your player tag...</span><kbd>/</kbd></button><button class="icon-button help-button" id="help-button" aria-label="About Raidroom"><span data-icon="help-circle"></span></button><span class="topbar-divider"></span><button class="avatar avatar-small" id="top-profile" aria-label="Open your player profile">+</button></div>
     </header>
     <main id="main-content" tabindex="-1"></main>
     <footer class="footer"><span><span class="footer-mark" data-icon="swords"></span>Built for the love of the raid.</span><span>Game artwork © Supercell · assets via <a href="https://github.com/ClashKingInc/ClashKingAssets" target="_blank" rel="noopener noreferrer">ClashKing</a>. Unofficial; not endorsed by Supercell. <a href="https://supercell.com/en/fan-content-policy/" target="_blank" rel="noopener noreferrer">Fan Content Policy <span data-icon="arrow-up-right"></span></a></span></footer>
