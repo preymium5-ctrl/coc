@@ -1,10 +1,18 @@
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { readExecutionProfile } from "./execution-profile.mjs";
+import {startLocalActivityCollector} from './local-activity.mjs';
 
 const [command, ...args] = process.argv.slice(2);
 if (!["dev", "build"].includes(command)) throw new Error("Expected dev or build.");
 const managedLinux = readExecutionProfile() === "managed-linux";
+
+if(command==='dev'&&!managedLinux){
+  const explicitPort=args.indexOf('--port');
+  const port=explicitPort>=0?args[explicitPort+1]:'5173';
+  if(!/^\d{2,5}$/.test(port||''))throw new Error('Choose a valid local server port.');
+  await startLocalActivityCollector(fileURLToPath(new URL('../',import.meta.url)),'http://127.0.0.1:'+port);
+}
 
 if (managedLinux && command === "build") {
   const result = spawnSync("bash", [

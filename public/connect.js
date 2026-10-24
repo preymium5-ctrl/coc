@@ -111,7 +111,8 @@ function renderRanked(){
 }
 
 render=function(){
-  if(view==='ranked'&&hasPlayer()){$('#main-content').innerHTML=renderRanked();updateSidebar();document.title='Ranked battles · Raidroom';}
+  if(view==='clan'){$('#main-content').innerHTML=renderClan();updateSidebar();document.title='Clan hub · Raidroom';}
+  else if(view==='ranked'&&hasPlayer()){$('#main-content').innerHTML=renderRanked();updateSidebar();document.title='Ranked battles · Raidroom';}
   else oldRender();
   $('#sidebar-source').textContent=state.source==='live'?'Connected game profile':hasPlayer()?'Saved on this device':'No player connected';
   $('#add-player-side').innerHTML=icon('search')+'Find a player';
@@ -221,5 +222,5 @@ const rankedLink=document.createElement('a');rankedLink.className='nav-link';ran
 
 if(location.hash==='#ranked')view='ranked';
 render();
-siteJSON('/api/status').then(status=>{apiConnected=!!status.connected;if(apiConnected&&state.source==='live')refreshLivePlayer();}).catch(()=>{});
-setInterval(()=>{if(document.visibilityState==='visible'&&state.source==='live'&&!liveSyncing&&!$('#modal').open)refreshLivePlayer();},300000);
+siteJSON('/api/status').then(status=>{apiConnected=!!status.connected;if(apiConnected&&window.RaidroomAccess?.admin&&state.source==='live')refreshLivePlayer();}).catch(()=>{});
+setInterval(()=>{if(window.RaidroomAccess?.admin&&document.visibilityState==='visible'&&state.source==='live'&&!liveSyncing&&!$('#modal').open)refreshLivePlayer();},300000);

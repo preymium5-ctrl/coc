@@ -39,6 +39,20 @@ test('a malformed upstream profile is a provider error rather than a player-tag 
   await assert.rejects(getPlayer(tag,{config,fetcher:async()=>json({name:'Incomplete',townHallLevel:18})}),e=>e.status===502&&e.code==='invalid_profile');
 });
 
+test('a transient proxy TLS failure retries once within the same timeout budget', async () => {
+  let calls=0,signal;
+  const fetcher=async (_url,init)=>{
+    calls++;if(calls===1){signal=init.signal;return new Response(null,{status:525});}
+    assert.equal(init.signal,signal);assert.equal(init.redirect,'manual');
+    return json({tag,name:'Live profile',townHallLevel:17});
+  };
+  assert.equal((await getPlayer(tag,{config,fetcher})).townHallLevel,17);
+  assert.equal(calls,2);
+  calls=0;
+  await assert.rejects(getPlayer(tag,{config,fetcher:async()=>{calls++;return new Response(null,{status:525});}}),e=>e.code==='upstream_unavailable');
+  assert.equal(calls,2);
+});
+
 test('official compact timestamps, durations, and resource arrays are mapped without counting bonuses twice', () => {
   const [battle] = normalizeBattles([officialEntry], tag);
   assert.equal(battle.date, '2026-10-24T06:15:30.000Z');

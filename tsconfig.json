@@ -23,6 +23,7 @@
       }
     ],
     "paths": {
+      "#raidroom-runtime": ["./lib/runtime.ts"],
       "@/*": [
         "./*"
       ]
@@ -36,12 +37,13 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
+    ".next-vercel/types/**/*.ts",
+    ".next-vercel/dev/types/**/*.ts",
     "**/*.mts"
   ],
   "exclude": [
     "node_modules",
+    ".next",
     "examples",
     "dist",
     ".vinext",

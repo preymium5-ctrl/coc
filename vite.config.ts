@@ -1,5 +1,6 @@
 import vinext from "vinext";
 import { defineConfig } from "vite";
+import {fileURLToPath} from 'node:url';
 import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { configureToolEnvironment } from "./scripts/tool-environment.mjs";
@@ -46,7 +47,9 @@ export default defineConfig(async ({ command }) => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    resolve: {alias: {'#raidroom-runtime': fileURLToPath(new URL('./lib/runtime.cloudflare.ts',import.meta.url))}},
     server: {
+      fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/.openai/local/**', '**/.wrangler/**'] },
       ...(managedLinux
         ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] }
         : {}),

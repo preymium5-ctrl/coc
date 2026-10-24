@@ -15,8 +15,12 @@
   <script src="./records.js" defer></script>
   <script src="./app.js" defer></script>
   <script src="./connect.js" defer></script>
+  <script src="./clan.js" defer></script>
+  <script src="./access.js" defer></script>
+  <link rel="stylesheet" href="./clan.css">
+  <link rel="stylesheet" href="./access.css">
 </head>
-<body>
+<body class="public-shell access-loading">
   <a class="skip-link" href="#main-content">Skip to content</a>
   <aside class="sidebar" id="sidebar">
     <a href="#overview" class="brand" aria-label="Raidroom home"><span class="brand-mark" data-icon="swords"></span>RAIDROOM<span class="brand-dot">.</span></a>
@@ -42,6 +46,7 @@
       <div class="topbar-left"><button class="icon-button mobile-menu" id="mobile-menu" aria-label="Open navigation" aria-expanded="false"><span data-icon="menu"></span></button><span class="breadcrumb">Command center <span>/</span> <strong id="breadcrumb-title">Overview</strong></span></div>
       <div class="topbar-actions"><button class="player-search" id="player-search" aria-label="Find your player tag"><span data-icon="search"></span><span>Find your player tag...</span><kbd>/</kbd></button><button class="icon-button help-button" id="help-button" aria-label="About Raidroom"><span data-icon="help-circle"></span></button><span class="topbar-divider"></span><button class="avatar avatar-small" id="top-profile" aria-label="Open your player profile">+</button></div>
     </header>
+    <div class="site-loading" role="status"><span class="lookup-spinner"></span>Opening Raidroom…</div>
     <main id="main-content" tabindex="-1"></main>
     <footer class="footer"><span><span class="footer-mark" data-icon="swords"></span>Built for the love of the raid.</span><span>Game artwork © Supercell · assets via <a href="https://github.com/ClashKingInc/ClashKingAssets" target="_blank" rel="noopener noreferrer">ClashKing</a>. Unofficial; not endorsed by Supercell. <a href="https://supercell.com/en/fan-content-policy/" target="_blank" rel="noopener noreferrer">Fan Content Policy <span data-icon="arrow-up-right"></span></a></span></footer>
   </div>

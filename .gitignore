@@ -9,9 +9,11 @@ node_modules/
 
 /dist/
 /.next/
+/.next-vercel/
 /.vinext/
 /.wrangler/
 /.sites-runtime/
 *.tsbuildinfo
 .dev.vars*
+.vercel/
 
