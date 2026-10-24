@@ -24,6 +24,17 @@ test('missing configuration is an actionable error, never a fabricated profile',
   await assert.rejects(getPlayer(tag, { config: { baseUrl: config.baseUrl }, fetcher: async () => json({}) }), e => e.code === 'setup_required');
 });
 
+test('Workers-compatible manual redirects never forward the credential to another host', async () => {
+  let requests=0;
+  const fetcher=async (_url,init)=>{
+    requests++;
+    assert.equal(init.redirect,'manual');
+    return new Response(null,{status:302,headers:{Location:'https://untrusted.example/collect'}});
+  };
+  await assert.rejects(getPlayer(tag,{config,fetcher}),e=>e.status===502&&e.code==='unexpected_redirect');
+  assert.equal(requests,1);
+});
+
 test('a malformed upstream profile is a provider error rather than a player-tag error', async () => {
   await assert.rejects(getPlayer(tag,{config,fetcher:async()=>json({name:'Incomplete',townHallLevel:18})}),e=>e.status===502&&e.code==='invalid_profile');
 });
