@@ -105,6 +105,7 @@
 .giveaway-layout { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr); gap:20px; align-items:start; }
 .giveaway-rounds { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
 .giveaway-round { overflow:hidden; }
+.giveaway-round:last-child:nth-child(odd) { grid-column:1/-1; }
 .giveaway-prize { min-height:124px; padding:25px 20px; position:relative; display:flex; align-items:flex-end; overflow:hidden; }
 .giveaway-prize>div { position:relative; z-index:1; }
 .giveaway-prize .eyebrow { display:block; font-size:7px; letter-spacing:1px; margin-bottom:9px; }
