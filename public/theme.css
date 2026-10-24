@@ -17,6 +17,12 @@ body { background: var(--bg); }
 .sidebar { background: #101114; border-color: #24272d; }
 .brand { color: #fff; }
 .brand-mark, .brand-dot { color: #72a6ff; }
+.brand-mark { width:34px; height:36px; flex-shrink:0; display:grid; place-items:center; transform:none; border:1px solid #3e6bb0; border-radius:9px; background:linear-gradient(145deg,#234c8b,#13243d); box-shadow:inset 0 1px #a9cdff25,0 3px 10px #0003; }
+.brand-mark img { width:28px; height:28px; object-fit:contain; }
+.game-ui-icon { width:24px; height:24px; object-fit:contain; display:inline-block; flex-shrink:0; vertical-align:middle; }
+.nav-link .game-ui-icon { width:23px; height:23px; }
+.stat-icon .game-ui-icon { width:26px; height:26px; }
+.footer .game-ui-icon { width:18px; height:18px; }
 .sidebar-label { color: #6f7685; }
 .nav-link { color: #a4aab6; font-size: 12px; }
 .nav-link:hover { background: #1c1f26; color: #fff; }

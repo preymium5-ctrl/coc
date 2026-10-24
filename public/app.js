@@ -43,7 +43,7 @@ const ICONS = {
   file:'<path d="M14 2H5v20h14V7zM14 2v5h5M8 12h8m-8 4h8"/>',
 };
 const icon = (name,cls='') => `<svg${cls?` class="${cls}"`:''} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ICONS.shield}</svg>`;
-function hydrateIcons(root=document){root.querySelectorAll('[data-icon]').forEach(el=>{el.outerHTML=icon(el.dataset.icon,el.className?.baseVal??el.className??'');});}
+function hydrateIcons(root=document){root.querySelectorAll('[data-icon]').forEach(el=>{el.outerHTML=icon(el.dataset.icon,el.className?.baseVal??el.className??'');});root.querySelectorAll('[data-game-icon]').forEach(el=>{el.outerHTML=gameIcon(el.dataset.gameIcon,el.className||'');});}
 const $ = (q,root=document) => root.querySelector(q);
 const $$ = (q,root=document) => [...root.querySelectorAll(q)];
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -59,6 +59,8 @@ function gameSlug(name){return String(name).toLowerCase().replace(/[.?‘’']/g
 function townHallArt(level,cls=''){const n=Math.max(1,Math.trunc(Number(level)||1));const path=`buildings/home-village/town_hall/level_${n}.webp`;return `<span class="game-art townhall-art ${cls}" role="img" aria-label="Town Hall ${n}"><img src="${n<=18?'./assets/game/':'https://assets.clashk.ing/'}${path}" alt="" loading="lazy" data-game-art><b aria-hidden="true">${n}</b>${icon('castle')}</span>`;}
 function unitArt(name,kind){const slug=gameSlug(name),key=`${kind}/${slug}`,path=kind==='spells'?`${key}.webp`:`${key}/icon.webp`;return `<span class="game-art unit-art"><img src="${SHIPPED_UNITS.has(key)?'./assets/game/':'https://assets.clashk.ing/'}${path}" alt="${esc(name)}" loading="lazy" data-game-art>${icon(kind==='heroes'?'crown':kind==='spells'?'wand':'shield')}</span>`;}
 function resourceArt(name){return `<img class="resource-art" src="./assets/game/resources/${name}.webp" alt="" loading="lazy" aria-hidden="true">`;}
+const GAME_INTERFACE_ART={grid:'interface/clan_castle.png',users:'heroes/barbarian_king/icon.webp',trophy:'interface/trophy.png',swords:'interface/wood_swords.png',shield:'interface/shield.png',coins:'resources/gold.webp',castle:'buildings/home-village/town_hall/level_17.webp'};
+function gameIcon(name,cls=''){const path=GAME_INTERFACE_ART[name];return path?`<img class="game-ui-icon ${esc(cls)}" src="./assets/game/${path}" alt="" aria-hidden="true" width="24" height="24" decoding="async">`:icon(name,cls);}
 let view=VIEWS[location.hash.slice(1)]?location.hash.slice(1):'overview';
 let battleFilter='all',battleQuery='',battlePeriod='all',battlePage=0,chartPeriod=7,leaderPeriod='today';
 let apiConnected=false,objectUrls=[],modalCleanup=null;

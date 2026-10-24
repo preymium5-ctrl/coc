@@ -5,8 +5,8 @@ export const metadata: Metadata = {
   title: "Raidroom — Your village, in focus",
   description: "Look up your Clash of Clans village, track your progress, and explore recent and ranked battles.",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: "/assets/favicon.svg",
+    shortcut: "/assets/favicon.svg",
   },
 };
 

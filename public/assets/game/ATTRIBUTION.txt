@@ -7,6 +7,14 @@ https://assets.clashk.ing/
 ClashKing Assets documents and welcomes reuse of its image CDN with credit.
 Raidroom displays credit and a source link in its footer.
 
+Interface artwork (unmodified):
+interface/clan_castle.png: https://assets.clashk.ing/bot/icons/clan_castle.png
+interface/wood_swords.png: https://assets.clashk.ing/bot/icons/wood_swords.png
+interface/trophy.png: https://assets.clashk.ing/bot/icons/trophy.png
+interface/shield.png: https://assets.clashk.ing/bot/icons/shield.png
+interface/chest.webp: https://assets.clashk.ing/chests/chest.webp
+The Raidroom favicon embeds the crossed-swords artwork in a blue frame.
+
 Supercell Fan Content Policy:
 https://supercell.com/en/fan-content-policy/
 
