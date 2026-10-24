@@ -1,56 +1,31 @@
 # Raidroom
 
-A responsive Clash of Clans companion dashboard in white, black, and blue, with authentic game artwork, player profiles, a battle journal, trophy charts, a personal loot leaderboard, and a playable video library.
+A Clash of Clans dashboard in white, black, and blue with authentic game artwork, automatic player lookup, a battle journal, rankings, and a recording library.
 
 ## Run locally
 
-Requires Node.js 20 or newer. No dependency installation or build is needed.
+Requires Node.js 22.13 or newer. Install with the Sites dependency helper, then run `npm run dev` and open the printed local URL. `npm run check` runs type checks and API contract tests. `npm run build` creates the Worker build.
 
-```powershell
-npm start
-```
+Copy `.env.example` to `.env`. Create a free developer key at <https://developer.clashofclans.com>, allowing IP `45.79.218.79` for the RoyaleAPI proxy. Put the key in `COC_API_TOKEN`; the default server base is `https://cocproxy.royaleapi.dev/v1`. The proxy setup is documented at <https://docs.royaleapi.com/proxy.html>. Keep `.env` private and untracked. Hosted deployments use native Sites environment variables, with `COC_API_TOKEN` marked secret.
 
-Open `http://127.0.0.1:4173`. The static website is in `dist/`.
+## Automatic data
 
-## Included behavior
+Entering a player tag fetches the public Supercell profile through the Site's server. Raidroom detects the name, experience level, Town Hall, trophies, league, clan, troop levels, spell levels, heroes, and equipment. Refresh reloads the profile and activity; an open tab refreshes every five minutes.
 
-- Clearly labeled sample village for initial exploration.
-- Add and edit a personal player profile; starting a village clears sample battles.
-- Import a real player profile JSON from the official API, including troop, spell, and hero levels. Each import saves a timestamped trophy snapshot.
-- Manually log attacks and defenses with stars, destruction, loot, dates, trophy changes, and strategy notes.
-- Filter and search attacks; paginate longer journals; inspect and delete records.
-- Daily, weekly, and all-time loot rankings calculated from recorded gold and elixir. Dark elixir is reported separately. Rankings cover the local village, not the global player base.
-- Trophy charts for seven or thirty days based on actual imported/edited snapshots.
-- Save YouTube recordings or upload videos up to 100 MB and play them in the site. Local videos use IndexedDB; metadata and the journal use localStorage.
-- JSON export and restore, with explicit confirmation before replacing records. Video binaries are excluded from exports; YouTube links are included.
-- Responsive navigation, keyboard controls, reduced-motion support, labeled forms, and modal focus management through native dialogs.
+Recent battle results and league groups come from the official API. ClashKing supplements recorded history and global/country rankings. Each result identifies its source. Missing values remain unknown, and provider outages show coverage messages without replacing real records with samples. No complete historical feed is guaranteed; older battles depend on provider coverage and records retained in this browser.
 
-## Official profile lookup
+The Ranked battles page lists reported ranked and Legend attacks/defenses, current group placement where available, and reported season history. A null ranking means the player is not listed; unavailable rankings are labeled separately. Personal daily/weekly/all-time loot rankings use reported gold and elixir from attacks in this browser, not a global loot leaderboard.
 
-The included local Node server implements a server-only `GET /api/players/:tag` proxy. To enable it, set `COC_API_TOKEN` in the server's process environment before starting. Supercell requires the server's public IP address to be allowlisted for that key. No API credentials are sent to the browser or included in any artifact. Requests are cached for 60 seconds.
+API credentials stay server-side. Only the official API/proxy receives the Bearer token; community endpoints receive no token. Requests validate tags, time out, bound response size, reject redirects, and return sanitized errors. Public game data does not require a Supercell ID or game password.
 
-The hosted build is static: automatic API lookup and background synchronization are not connected there. Its account forms explain this, and users can track manually or import profiles. A player tag alone does not retrieve private information. No Supercell ID, password, or game login is needed.
+## Browser records and recordings
 
-The site does not fetch playable in-game replays or promise a complete historical multiplayer battle feed. The replay library plays user-supplied recordings and YouTube links.
+Personal journals, trophy snapshots, and fetched battles use localStorage. Uploaded videos use IndexedDB; saved YouTube recordings can also play in the website. Playable in-game replays are not returned as video by the API. Export a JSON backup before clearing browser data or switching devices; video files need separate backups. Starting another village offers an export before replacing the current journal.
 
-Records are local to the browser, rather than shared or synchronized between devices. Clearing browser storage deletes local data. Export the journal and retain original video files separately.
+The initial sample village is clearly labeled. Connecting a real player clears sample records. Manual logging and official profile JSON import remain available.
 
-## Checks
+## Structure and deployment
 
-```powershell
-npm run check
-```
+`ui/index.html` is served by `app/route.ts`. Browser assets and scripts live in `public/`. Server endpoints under `app/api/` use `lib/coc-service.mjs`. The Vinext/Cloudflare Worker build preserves the Sites hosting integration. `.openai/hosting.json` retains the existing project identity and private audience.
 
-## Game artwork and design
-
-The site uses a white canvas, black sidebar, and blue actions and charts. The official game renders retain their original colors.
-
-- The hero and recording cover use the [official Clash of Clans game-page artwork](https://supercell.com/en/games/clashofclans/), downloaded unchanged from [Supercell's image CDN](https://supercell.com/images/ae58a39e76410b4ae9c2bea65d4a584d/hero_bg_clashofclans_.fae7c799.jpg) to `dist/assets/clash-official-banner.jpg`.
-- Town Halls 1–18, six heroes, eight troops, four spells, and three resource images are real Supercell game assets distributed through [ClashKing Assets](https://github.com/ClashKingInc/ClashKingAssets). The images used by the sample village are included in `dist/assets/game/`; other imported units request their corresponding image from the documented `https://assets.clashk.ing/` CDN. If an image is unavailable, an accessible icon fallback is shown.
-- Attribution to Supercell and ClashKing is visible in the footer. Supercell owns the game artwork. See [Supercell's Fan Content Policy](https://supercell.com/en/fan-content-policy/).
-
-No generated fantasy artwork is used by the current site. The original illustration is preserved in the prior Git version.
-
-## Unofficial fan content
-
-This material is unofficial and is not endorsed by Supercell. For more information see [Supercell's Fan Content Policy](https://supercell.com/en/fan-content-policy/).
+Game imagery is credited in the website footer. Collected history and rankings are provided by [ClashKing](https://clashk.ing/). This independent fan site is not endorsed by Supercell; see [Supercell's Fan Content Policy](https://supercell.com/en/fan-content-policy/).

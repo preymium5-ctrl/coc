@@ -299,3 +299,60 @@ tr.battle-row:hover { background: #f5f8ff; }
   .footer { font-size: 8px; }
   .panel-foot { font-size: 8px; }
 }
+
+/* Connected-player lookup and live battle history. */
+.sidebar { overflow-y: auto; scrollbar-width: thin; scrollbar-color: #2d3544 #101114; }
+.live-status-line { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin: -9px 0 19px; }
+.live-status-line>div { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; font-size: 10px; color: #64748b; }
+.live-status-line .button { font-size: 10px; padding: 6px 10px; }
+.live-badge { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #c8dcff; background: #edf4ff; color: #2563eb; border-radius: 5px; font-size: 10px; font-weight: 600; padding: 3px 8px; }
+.live-badge svg { width: 11px; height: 11px; }
+.sync-notice { display: flex; align-items: start; gap: 9px; font-size: 11px; color: #7c6650; background: #fff9ed; border: 1px solid #eadbc0; padding: 11px 14px; border-radius: 7px; margin-bottom: 17px; }
+.sync-notice svg { width: 15px; height: 15px; margin-top: 2px; }
+.rank-summary { display: grid; grid-template-columns: 1.25fr 1fr 1fr auto; align-items: center; gap: 22px; padding: 18px 21px; border: 1px solid #dbe6f7; background: #fff; border-radius: 9px; margin: 20px 0; }
+.rank-summary>div:first-child { display: flex; align-items: center; gap: 11px; }
+.rank-summary-icon { color: #397be7; background: #edf4ff; border: 1px solid #dce9ff; width: 37px; height: 37px; display: flex; align-items: center; justify-content: center; border-radius: 9px; }
+.rank-summary small { color: #74839a; font-size: 10px; display: block; margin-bottom: 4px; }
+.rank-summary strong { color: #283e60; font-size: 13px; font-weight: 650; }
+.rank-summary .text-link { font-size: 10px; }
+.profile-rank-row { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; font-size: 10px; color: #74829a; }
+.profile-rank-row strong { color: #396cb8; font-weight: 600; }
+.unknown-townhall { display: inline-flex; width: 41px; height: 43px; align-items: center; justify-content: center; border-radius: 7px; background: #f0f4fb; color: #9cafcb; flex-shrink: 0; }
+.unknown-townhall svg { width: 23px; height: 23px; }
+.missing-value { color: #8799b4; }
+.battle-facts { margin: 0 0 18px; padding: 0; }
+.battle-facts>div { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e8eef8; font-size: 11px; }
+.battle-facts dt { color: #7a8ca6; }
+.battle-facts dd { margin: 0; color: #395576; font-weight: 550; }
+.season-panel { margin-top: 21px; }
+.live-tag-input { position: relative; }
+.live-tag-input>svg { position: absolute; left: 13px; top: 14px; width: 18px; height: 18px; color: #7196ce; }
+.live-tag-input input { padding: 12px 14px 12px 41px; font-size: 17px; letter-spacing: .9px; font-weight: 550; min-height: 49px; text-transform: uppercase; background: #f9fbff; border-color: #cbdcf7; }
+.live-tag-input input::placeholder { font-size: 15px; font-weight: 400; }
+.lookup-placeholder, .lookup-loading { min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 13px; text-align: center; border: 1px dashed #d7e3f7; background: #fafcff; border-radius: 8px; margin-top: 21px; padding: 22px; color: #8ea6c8; }
+.lookup-placeholder>svg { width: 34px; height: 34px; color: #aec5e8; }
+.lookup-placeholder p { color: #8296b4; font-size: 11px; }
+.lookup-loading strong { color: #4a6e9e; font-size: 13px; font-weight: 550; }
+.lookup-loading small { font-size: 10px; color: #8299bb; margin-top: -7px; }
+.lookup-spinner { display: block; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #dce8fb; border-top-color: #4383ed; animation: lookup-spin .75s linear infinite; }
+@keyframes lookup-spin { to { transform: rotate(360deg); } }
+.lookup-profile { border: 1px solid #dce8f9; border-radius: 9px; padding: 17px; margin-top: 20px; background: linear-gradient(150deg,#f0f6ff,#fff); }
+.lookup-profile .lookup-profile { margin: 0; padding: 0; border: 0; }
+.lookup-identity { display: flex; align-items: center; gap: 12px; }
+.lookup-identity .townhall-art { width: 49px; height: 51px; }
+.lookup-identity h3 { font-size: 19px; font-weight: 600; color: #263d60; }
+.lookup-identity p { color: #7891b4; font-size: 10px; margin-top: 2px; }
+.lookup-check { margin-left: auto; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: #3b7de3; background: #e1edff; }
+.lookup-check svg { width: 14px; height: 14px; }
+.lookup-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #dfe9f9; }
+.lookup-stats small { font-size: 10px; display: block; color: #7d93b4; margin-bottom: 4px; }
+.lookup-stats strong { color: #315582; font-size: 21px; font-family: var(--display); font-weight: 600; }
+.lookup-roster { display: flex; gap: 18px; align-items: center; margin-top: 18px; padding-top: 12px; border-top: 1px solid #e3ebf8; color: #5d7ea9; font-size: 10px; flex-wrap: wrap; }
+.lookup-roster span { display: inline-flex; align-items: center; gap: 5px; }
+.lookup-roster svg { width: 13px; height: 13px; color: #7299d1; }
+.lookup-next { color: #849bbd; font-size: 9px; margin-top: 14px; }
+.lookup-privacy { color: #8194b0; display: flex; align-items: center; gap: 6px; font-size: 9px; margin-top: 18px; }
+.lookup-privacy svg { width: 12px; height: 12px; }
+@media(max-width:1050px) { .rank-summary { gap: 14px; padding: 16px; } .rank-summary strong { font-size: 11px; } .rank-summary small { font-size: 9px; } }
+@media(max-width:760px) { .rank-summary { grid-template-columns: 1fr 1fr; gap: 18px; } .rank-summary .text-link { align-self: end; padding-bottom: 2px; } }
+@media(max-width:520px) { .rank-summary { gap: 18px 12px; padding: 16px; } .rank-summary-icon { width: 30px; height: 30px; } .rank-summary-icon svg { width: 15px; height: 15px; } .rank-summary>div:first-child { gap: 8px; } .rank-summary strong { font-size: 11px; } .live-status-line { align-items: flex-start; gap: 10px; } .live-status-line>div { gap: 6px; font-size: 9px; } .live-status-line .button { font-size: 9px; padding: 5px 7px; } .live-badge { font-size: 9px; padding: 2px 5px; } .unknown-townhall { width: 31px; height: 35px; } .unknown-townhall svg { width: 18px; height: 18px; } .table-tabs { gap: 16px; } .table-tab { font-size: 9px; } .lookup-roster { gap: 12px; } .lookup-next { font-size: 9px; line-height: 1.8; } .lookup-identity h3 { font-size: 18px; } }

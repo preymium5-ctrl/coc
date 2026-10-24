@@ -6,3 +6,12 @@ node_modules/
 *.tar.gz
 .openai/local/
 .openai/cache/
+
+/dist/
+/.next/
+/.vinext/
+/.wrangler/
+/.sites-runtime/
+*.tsbuildinfo
+.dev.vars*
+
