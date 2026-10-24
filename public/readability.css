@@ -1,0 +1,124 @@
+/* Readable type throughout the public dashboard and admin workspace.
+   Component sizes use rems, with supporting text starting at 14px. */
+body { font-size:1rem; line-height:1.65; }
+button,input,select,textarea { line-height:1.5; }
+.button { min-height:44px; line-height:1.4; }
+.sidebar-label { letter-spacing:.7px; line-height:1.6; color:#98a3b5; }
+.breadcrumb { line-height:1.5; }
+.topbar-left { min-width:0; }
+.topbar-actions { flex-shrink:0; }
+.page-heading,.section-topline { flex-wrap:wrap; }
+.page-heading .subtitle { line-height:1.7; }
+.eyebrow { line-height:1.6; letter-spacing:1px; }
+.text-link { line-height:1.5; }
+.footer { line-height:1.8; flex-wrap:wrap; }
+.footer>span { min-width:0; }
+.clan-coverage,.clan-identity>small,.clan-roster-top p,
+.member-card-foot,.member-identity p,.member-card-stats small,
+.clan-stat small,.clan-stat p,.clan-podium-card>small,
+.member-table-button small,.coverage-tag,.member-profile-trophies small,
+.usage-empty,.hall-cap,.games-observed-at,.member-attack-heading p,
+.ranked-tournament-note small,
+.giveaway-section-heading p:not(.eyebrow),.giveaway-winners small,
+.giveaway-event p,.family-option small,.family-event-card p,
+.capital-hero p,.capital-hero small,.capital-weekend-total>span,
+.games-total>small,.games-total>span,.games-hero p {
+  color:#5e6e87;
+}
+.clan-coverage { align-items:flex-start; }
+.clan-coverage>svg { flex-shrink:0; margin-top:4px; }
+.auto-sync-status { color:#5f779a; }
+.auto-sync-status>span:first-child { flex-wrap:wrap; }
+.prize-status.pending { color:#5e6c80; }
+.games-score-state { color:#61718a; }
+.event-table .score-unknown { color:#68768b; }
+.giveaway-season,.giveaway-event>small { color:#426ba6; }
+.giveaway-section-heading .eyebrow,.giveaway-calendar-heading .eyebrow,
+.pass-prize .eyebrow { color:#426ba6; }
+.family-picker .eyebrow,.family-event-card .eyebrow { color:#58719a; }
+.giveaway-layout { grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr); }
+.giveaway-prize { min-height:150px; padding:26px 22px; }
+.giveaway-prize h3 { line-height:1.4; }
+.pass-prize>img { width:84px; height:84px; top:12px; right:9px; }
+.giveaway-winners { padding:4px 20px; }
+.giveaway-winners li { min-height:100px; padding:18px 0; gap:12px; }
+.giveaway-winners strong { line-height:1.5; }
+.giveaway-winners small { line-height:1.6; }
+.prize-status { padding:7px 9px; gap:5px; line-height:1.4; }
+.prize-status svg { width:14px; height:14px; flex-shrink:0; }
+.giveaway-calendar h3 { line-height:1.5; }
+.giveaway-calendar li { padding:25px 0; gap:15px; }
+.giveaway-date { width:64px; padding:10px 4px; }
+.giveaway-date>span { line-height:1.5; }
+.giveaway-date strong { line-height:1.4; }
+.giveaway-event h4 { line-height:1.5; }
+.giveaway-event p { line-height:1.75; }
+.giveaway-event>small { display:block; line-height:1.7; }
+.family-option { min-width:290px; }
+.family-option>span:not(.family-choice-dot) { min-width:0; }
+.family-option small { line-height:1.6; }
+.clan-podium-card>small { line-height:1.6; text-align:center; }
+.clan-roster-top,.clan-leader-controls { flex-wrap:wrap; }
+.clan-tabs { gap:25px; overflow-x:auto; overflow-y:hidden; }
+.clan-tabs button { flex-shrink:0; }
+.clan-unit-grid { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:14px; }
+.clan-unit-grid .troop-card h3 { line-height:1.45; min-height:2.9em; }
+.troop-card .unit-level-row { flex-wrap:wrap; row-gap:6px; }
+.unit-maxed { line-height:1.5; padding:3px 6px; }
+.townhall-art>b,.village-townhall .townhall-art>b,.player-xp {
+  line-height:1.3; min-width:24px; padding:1px 4px;
+}
+.member-league-badge { max-width:100%; }
+.member-league-badge>span { min-width:0; }
+.member-league-badge small { letter-spacing:.6px; }
+.member-attack-heading { align-items:flex-start; flex-wrap:wrap; }
+.attack-resources small { white-space:normal; line-height:1.5; }
+.attack-resources strong { overflow-wrap:anywhere; }
+.capital-districts summary { gap:16px; flex-wrap:wrap; line-height:1.5; }
+.capital-districts p { line-height:1.6; }
+.event-table .panel-header { flex-wrap:wrap; gap:12px; }
+.games-coverage-note p { line-height:1.8; }
+.games-admin .button { height:auto; min-height:46px; }
+@media(min-width:521px) and (max-width:900px) {
+  .brand-name { display:none; }
+}
+@media(max-width:1250px) {
+  .giveaway-layout { grid-template-columns:1fr; }
+  .giveaway-calendar ol { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
+  .giveaway-calendar li { border:0; }
+  .giveaway-calendar li>img { display:none; }
+  .family-option { min-width:0; }
+}
+@media(max-width:1000px) {
+  .giveaway-calendar ol { display:block; }
+  .giveaway-calendar li { border-bottom:1px solid #edf1f8; }
+  .giveaway-calendar li>img { display:block; }
+}
+@media(max-width:760px) {
+  .topbar-left { flex:1; }
+  .breadcrumb { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0; }
+  .breadcrumb>span { display:none; }
+  .breadcrumb>strong { font-size:.875rem; }
+  .public-view-label { max-width:145px; }
+  .page-heading { align-items:flex-start; }
+  .page-heading .button { white-space:normal; }
+  .giveaway-section-heading { gap:18px; }
+  .giveaway-winners li { min-height:98px; }
+  .giveaway-calendar-heading { padding:24px 22px; }
+  .member-profile-trophies { flex-wrap:wrap; gap:12px; }
+  .capital-weekend-total,.games-total { line-height:1.6; }
+  .public-top-heading { align-items:flex-start; }
+}
+@media(max-width:600px) {
+  .family-options { display:grid; grid-template-columns:1fr; }
+  .family-option { width:100%; gap:12px; padding:14px; }
+  .family-option img { width:38px; height:42px; }
+  .family-choice-dot { display:inline-grid; flex-shrink:0; }
+  .family-option small { overflow-wrap:anywhere; }
+  .clan-podium { grid-template-columns:1fr; gap:14px; }
+  .clan-podium-card { padding:26px 22px; }
+  .clan-podium-card .townhall-art { width:62px; height:62px; }
+  .clan-podium-card h3 { font-size:1.125rem; }
+  .clan-podium-card>strong { font-size:1.875rem; }
+  .clan-podium-card>small { font-size:.875rem; }
+}
