@@ -106,9 +106,10 @@ render=function(){
   syncAccessShell();
 };
 async function refreshSiteState(force=false){
-  if(sitePolling)return;sitePolling=true;
+  if(sitePolling)return;sitePolling=true;const requested=preferredClan;
   try{
-    const data=await clanJSON('/api/site'+(preferredClan?'?clan='+encodeURIComponent(preferredClan):'')),previous=siteAccess.clanTag;
+    const data=await clanJSON('/api/site'+(requested?'?clan='+encodeURIComponent(requested):'')),previous=siteAccess.clanTag;
+    if(preferredClan!==requested)return;
     siteAccess.admin=siteAccess.adminPage&&data.admin;siteAccess.localLogin=data.localLogin;siteAccess.nativeLogin=data.nativeLogin!==false;siteAccess.clan=data.clan;siteAccess.clans=data.clans||[];siteAccess.primaryClan=data.primaryClan;siteAccess.clanTag=data.clan?.tag||null;siteAccess.activitySync=data.activitySync||null;clanSyncing=data.activitySync?.state==='running'&&!!data.activitySync?.online;clanSyncDone=data.activitySync?.completed||0;clanSyncErrors=data.activitySync?.failed||0;siteAccess.ready=true;siteBootError='';
     if(previous!==siteAccess.clanTag){clanEpoch++;boardEpoch++;memberEpoch++;selectedMember=null;memberDetails=null;clanData=null;clanBoard=null;clanTodayBoard=null;clanWar=null;clanSearch='';resetClanEvents();}
     clanTimeZone=data.clan?.timeZone||clanTimeZone;
@@ -118,7 +119,7 @@ async function refreshSiteState(force=false){
     }
     render();
   }catch(error){siteBootError=error.message;siteAccess.ready=true;render();}
-  finally{sitePolling=false;}
+  finally{sitePolling=false;if(preferredClan!==requested)refreshSiteState(true);}
 }
 document.addEventListener('input',event=>{if(event.target.id==='published-clan-tag')siteDraftTag=event.target.value;});
 document.addEventListener('submit',async event=>{
@@ -136,7 +137,7 @@ document.addEventListener('submit',async event=>{
 });
 document.addEventListener('click',async event=>{
   const family=event.target.closest('[data-family-clan]');
-  if(family&&family.dataset.familyClan!==siteAccess.clanTag&&!sitePolling){
+  if(family&&family.dataset.familyClan!==siteAccess.clanTag){
     preferredClan=family.dataset.familyClan;try{localStorage.setItem('marine-durugista.clan',preferredClan);}catch{}
     const url=new URL(location.href);url.searchParams.set('clan',preferredClan);history.replaceState(null,'',url);await refreshSiteState(true);return;
   }
