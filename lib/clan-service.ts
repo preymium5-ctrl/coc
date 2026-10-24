@@ -1,6 +1,6 @@
 import {ApiError,configuration,normalizeTag,getPlayer,officialGet,communityGet,normalizeBattles,mergeBattle} from './coc-service.mjs';
 import {periodBounds,collectionStart,decorateProfile,troopUsage,cwlAverages,orientWar} from './clan-analytics.mjs';
-import {cached,playerBattles,saveBattles,syncInfo,clanTotals} from './clan-store';
+import {cached,playerBattles,saveBattles,syncInfo,clanTotals,memberAttacks} from './clan-store';
 
 export async function getPublicProfile(input:string){const tag=normalizeTag(input);return cached('profile:'+tag,async()=>decorateProfile(await getPlayer(tag)),90);}
 export async function getClan(input:string){
@@ -54,7 +54,7 @@ export async function getMemberDetails(input:string,timeZone='Asia/Singapore'){
   ]);
   const battles=await playerBattles(tag,collectionStart(timeZone));
   const month=periodBounds('month',timeZone),current=battles.filter(b=>new Date(b.date)>=new Date(month.start));
-  const periods=Object.fromEntries(await Promise.all(['day','week','month'].map(async period=>{const window=periodBounds(period,timeZone),rows=await clanTotals([tag],window.start,window.end);return [period,{...rows[0],window}];})));
+  const periods=Object.fromEntries(await Promise.all(['day','week','month'].map(async period=>{const window=periodBounds(period,timeZone),[rows,attacks]=await Promise.all([clanTotals([tag],window.start,window.end),memberAttacks(tag,window.start,window.end)]);return [period,{...rows[0],window,...attacks}];})));
   return {profile,periods,coverage:sync.coverage,usage:{classic:troopUsage(current,'classic'),war:troopUsage(current,'war'),limited:battles.length===3000},cwl,timeZone,fetchedAt:new Date().toISOString()};
 }
 type War={state?:string;clan?:{tag?:string};opponent?:{tag?:string};startTime?:string;[key:string]:unknown};

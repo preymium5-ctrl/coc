@@ -24,6 +24,8 @@ Hosted Sites keep the native Sign in with ChatGPT integration. Before a future d
 
 ## Clan hub
 
+Open a member to see up to ten newest recorded classic attacks and ten ranked/Legend attacks in the selected period, with opponent name, Town Hall, time, stars, destruction, and individual loot resources. The highest-loot attack card shows the actual opponent and exact gold, elixir, and dark elixir; its gold + elixir maximum searches all saved attacks for that period. Unreported opponent fields stay labeled as missing.
+
 Member cards and profiles show recorded ranked attacks, classic attacks, and the highest reported gold + elixir from one attack for the selected day, week, or month. Ranked includes Legend; classic means multiplayer farming. Defenses are excluded, other attack modes are not assigned to either count, and missing loot stays unknown. The maximum uses all saved records within the period, independently of the 3,000-record army-usage limit.
 
 An administrator adds the shared clan from **Overview** at `/admin`. Visitors open `/` and see only that published clan. The public pages have no clan/player switcher or editing tools. The roster shows names, Town Halls, player levels, and recorded activity. Select a member for hero, troop, spell, and pet levels; daily, weekly, and monthly loot and attack totals; army usage; and recorded CWL season averages. The current-war tab shows the real opponent, score, destruction, and war roster when the war log is public.

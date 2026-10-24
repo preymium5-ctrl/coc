@@ -1,5 +1,6 @@
 import {env} from '#raidroom-runtime';
 import {readClanTotals} from './clan-totals.mjs';
+import {readMemberAttacks} from './member-attacks.mjs';
 type Battle={id:string;date:string;type:string;mode:string;gold:number|null;elixir:number|null;dark:number|null;[key:string]:unknown};
 function database(){if(!env.DB)throw new Error('Clan storage is not configured.');return env.DB;}
 export async function cached<T>(key:string,loader:()=>Promise<T>,seconds=60):Promise<T>{
@@ -25,3 +26,4 @@ export async function syncInfo(tag:string){return database().prepare('SELECT syn
 export async function clanTotals(tags:string[],start:string,end:string){
   return readClanTotals(database(),tags,start,end);
 }
+export async function memberAttacks(tag:string,start:string,end:string){return readMemberAttacks(database(),tag,start,end);}
