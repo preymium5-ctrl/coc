@@ -1,13 +1,13 @@
 import {env} from '#raidroom-runtime';
 import {communityGet} from './coc-service.mjs';
-import {cached} from './clan-store';
+import {cachedHourly} from './clan-store';
 import {advanceGames,clanGamesWindow,gamesLifetime,confirmGames} from './clan-events.mjs';
 const keyFor=(clan:string,season:string,tag:string)=>'clan-games:'+clan+':'+season+':'+tag;
 export async function observeClanGames(profile:any){
   const db=env.DB,clan=profile?.clan?.tag,window=clanGamesWindow();
   if(!db||!clan||gamesLifetime(profile)===null)return null;
   const key=keyFor(clan,window.season,profile.tag);
-  const history=window.state==='upcoming'?null:await cached('clan-games-history:'+profile.tag+':'+window.season,()=>communityGet('/player/'+encodeURIComponent(profile.tag)+'/history/stats?type=clan_games&time%5Bafter%5D='+encodeURIComponent(window.start)+'&time%5Bbefore%5D='+encodeURIComponent(window.end)+'&limit=1000'),300).catch(()=>null);
+  const history=window.state==='upcoming'?null:await cachedHourly('clan-games-history:'+profile.tag+':'+window.season,()=>communityGet('/player/'+encodeURIComponent(profile.tag)+'/history/stats?type=clan_games&time%5Bafter%5D='+encodeURIComponent(window.start)+'&time%5Bbefore%5D='+encodeURIComponent(window.end)+'&limit=1000')).catch(()=>null);
   for(let attempt=0;attempt<4;attempt++){
     const old=await db.prepare('SELECT data,updated_at FROM site_settings WHERE key=?').bind(key).first<{data:string;updated_at:number}>();
     const prior=old?JSON.parse(old.data):null;

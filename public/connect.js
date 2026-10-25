@@ -15,10 +15,12 @@ const rankedBattle=b=>b.mode==='ranked'||b.mode==='legend'||b.type==='Ranked'||b
 VIEWS.ranked='Ranked battles';
 for(const type of ['Ranked','Legend','Friendly','Other'])if(!TYPES.includes(type))TYPES.push(type);
 
+const AUTO_REFRESH_MS=60*60*1000;
 async function siteJSON(path,{signal}={}){
   let response;
   try{response=await fetch(path,{signal:signal||AbortSignal.timeout(16000),credentials:'same-origin',cache:'no-store'});}
   catch(error){if(error.name==='AbortError')throw error;throw new Error('Could not reach the game-data connection. Please try again.');}
+  if(response.status===429)throw new Error('Too many requests. Please wait a minute before trying again.');
   let data;
   try{data=await response.json();}catch{throw new Error('The game-data connection is temporarily unavailable.');}
   if(!response.ok){const error=new Error(data.error||'Could not load this player.');error.code=data.code;throw error;}
@@ -223,4 +225,4 @@ const rankedLink=document.createElement('a');rankedLink.className='nav-link';ran
 if(location.hash==='#ranked')view='ranked';
 render();
 siteJSON('/api/status').then(status=>{apiConnected=!!status.connected;if(apiConnected&&window.RaidroomAccess?.admin&&state.source==='live')refreshLivePlayer();}).catch(()=>{});
-setInterval(()=>{if(window.RaidroomAccess?.admin&&document.visibilityState==='visible'&&state.source==='live'&&!liveSyncing&&!$('#modal').open)refreshLivePlayer();},300000);
+setInterval(()=>{if(window.RaidroomAccess?.admin&&document.visibilityState==='visible'&&state.source==='live'&&!liveSyncing&&!$('#modal').open)refreshLivePlayer();},AUTO_REFRESH_MS);

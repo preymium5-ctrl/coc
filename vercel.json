@@ -5,5 +5,5 @@
   "buildCommand": "npm run build:vercel",
   "installCommand": "npm ci",
   "regions": ["hnd1"],
-  "crons": [{"path":"/api/cron/activity","schedule":"* * * * *"}]
+  "crons": [{"path":"/api/cron/activity","schedule":"0 * * * *"}]
 }

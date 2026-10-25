@@ -38,17 +38,17 @@ After deployment, open **`https://YOUR-SITE.vercel.app/admin`**, sign in with th
 
 ## 3. Choose the automatic sync schedule
 
-The included Vercel cron runs **every minute** for the Pro deployment at `clashofclans.dev`. Set `RAIDROOM_SYNC_INTERVAL_SECONDS=60` in Production. Rankings in an open browser refresh every 30 seconds; fresh activity still depends on the collection schedule and provider availability. For a Hobby deployment, change the cron schedule to `0 0 * * *` and the interval to `86400`.
+The included Vercel Pro cron runs **once per hour**, at minute zero (`0 * * * *`). Production uses `RAIDROOM_SYNC_INTERVAL_SECONDS=3600`. Values below an hour are ignored, preventing an old minute setting from restoring frequent collection. Both clans are collected during the same invocation. Open dashboards refresh hourly, including admin player views; returning to a tab only refreshes when an hour is due.
 
-For **one-minute collection on Hobby**, configure an external HTTP scheduler to make a GET request every minute to:
+Game profiles, battle feeds, wars, Capital raids, Games history, member details, and leaderboards share server caches that expire at the next hourly boundary. A completed collector run invalidates derived member and clan summaries. For a Hobby deployment, change the cron schedule to `0 0 * * *` and the interval to `86400`.
 
-```text
-https://YOUR-SITE.vercel.app/api/cron/activity
-```
+An external scheduler, if used, should make an hourly GET request to `/api/cron/activity` with `Authorization: Bearer YOUR_CRON_SECRET`. Keep the secret in the scheduler's private header settings and allow enough request time for a full clan round. The endpoint always verifies the secret. Do not add a second scheduler to a deployment already using Vercel cron.
 
-Set its HTTP header to `Authorization: Bearer YOUR_CRON_SECRET` and set `RAIDROOM_SYNC_INTERVAL_SECONDS=60` in Vercel, then redeploy. Keep the secret in the scheduler's private header settings, never the URL. Use a scheduler that permits a long enough request timeout for a full clan round. Deployment Protection must allow the scheduler to reach the production endpoint; the endpoint itself always verifies the secret.
+### API rate limits
 
-For **Vercel Pro**, change the cron schedule in `vercel.json` to `* * * * *`, set `RAIDROOM_SYNC_INTERVAL_SECONDS=60`, and redeploy. [Vercel Hobby permits daily cron; Pro permits minute schedules](https://vercel.com/docs/cron-jobs/usage-and-pricing). Function usage and database/provider limits still apply.
+The `coc` project's published Vercel Firewall rules enforce **60 requests per minute per IP** for `/api/` excluding `/api/players/`, and **15 per minute per IP** for player profiles and battle feeds. Excess requests receive HTTP 429 at the firewall, before application execution. Static assets are outside these rules. Authenticated cron requests remain protected by their existing secret and make one request per hour.
+
+The intended rules are recorded in `config/vercel-firewall-rules.json`; this file documents the policy and is not automatically applied by deployment. Inspect the live settings with `vercel firewall rules list --scope lambo3 --project coc`, review draft changes with `vercel firewall diff`, and publish intentional changes with `vercel firewall publish`. These are fixed-window counters per IP and Vercel region, so this is a traffic control rather than a hard spending cap. Normal Vercel Firewall pricing applies.
 
 The sync endpoint awaits all member batches before responding. Database leases prevent overlapping rounds; failed feeds retain saved data and are retried on later invocations. A missed external scheduler invocation cannot be recovered until a later invocation arrives. Collection is observational and cannot recover battles omitted by providers.
 

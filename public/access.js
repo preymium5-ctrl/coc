@@ -25,7 +25,7 @@ function renderAutoSyncStatus(){
   const progress=running?` · ${sync.completed} / ${sync.total} members`:'';
   const last=sync?.lastSyncedAt?`Last ${sync.state==='failed'?'attempt':'sync'} ${relativeDate(sync.lastSyncedAt)}`:'Waiting for the first automatic sync';
   const note=sync?.failed?` · ${sync.failed} feeds unavailable; retrying automatically`:'';
-  return `<div class="auto-sync-status ${sync?.online?'online':'waiting'}" role="status"><span>${icon(running?'download':'zap')}<strong>${label}</strong>${progress}</span><span>${sync?.intervalSeconds>=86400?'Every day':sync?.intervalSeconds>=120?'Every '+Math.round(sync.intervalSeconds/60)+' minutes':'Every minute'} · ${last}${note}</span></div>`;
+  return `<div class="auto-sync-status ${sync?.online?'online':'waiting'}" role="status"><span>${icon(running?'download':'zap')}<strong>${label}</strong>${progress}</span><span>${sync?.intervalSeconds>=86400?'Every day':sync?.intervalSeconds===3600?'Every hour':sync?.intervalSeconds>=3600?'Every '+Math.round(sync.intervalSeconds/3600)+' hours':sync?.intervalSeconds>=120?'Every '+Math.round(sync.intervalSeconds/60)+' minutes':'Every minute'} · ${last}${note}</span></div>`;
 }
 function publishedClanCard(){
   const clan=clanData||siteAccess.clan;
@@ -157,9 +157,10 @@ document.addEventListener('click',event=>{
 document.addEventListener('keydown',event=>{if(!(siteAccess.adminPage&&siteAccess.admin)&&event.key==='/'){event.stopImmediatePropagation();}},true);
 window.addEventListener('hashchange',()=>{if(siteAccess.ready){if(!siteAccess.adminPage&&view==='overview'){clanPeriod='day';loadClanBoard();}if(view!=='clan'){memberEpoch++;selectedMember=null;memberDetails=null;}render();}});
 refreshSiteState(true);
-let activityViewPolling=false;
+let activityViewPolling=false,lastActivityViewRefresh=Date.now();
 async function refreshActivityView(){
-  if(document.visibilityState!=='visible'||activityViewPolling)return;activityViewPolling=true;
+  if(document.visibilityState!=='visible'||activityViewPolling||Date.now()-lastActivityViewRefresh<AUTO_REFRESH_MS)return;
+  activityViewPolling=true;lastActivityViewRefresh=Date.now();
   try{
     await refreshSiteState();
     if(siteAccess.clanTag&&clanData&&(!siteAccess.adminPage||siteAccess.admin)){
@@ -170,5 +171,5 @@ async function refreshActivityView(){
     }
   }finally{activityViewPolling=false;}
 }
-setInterval(refreshActivityView,30000);
+setInterval(refreshActivityView,AUTO_REFRESH_MS);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshActivityView();});

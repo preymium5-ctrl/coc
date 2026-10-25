@@ -2,6 +2,7 @@ import {env} from '#raidroom-runtime';
 import {ApiError} from './coc-service.mjs';
 import {publishedClans} from './published-clan';
 import {getClan,syncClanMembers} from './clan-service';
+import {invalidateClanViews} from './clan-store';
 import {hashSecret,verifySecret} from './admin-auth.mjs';
 import {readJob,touchCollector,claimJob,setJobRoster,completeMembers,failJob,queueJob,publicJob} from './activity-store.mjs';
 
@@ -49,5 +50,7 @@ export async function collectActivityBatch(input:{runId?:unknown;memberTags?:unk
   let members:{tag:string;failed:boolean}[];
   try{const result=await syncClanMembers(config.tag,pending,config.timeZone);members=result.members.map((member:{tag:string;error?:string;coverage?:{available?:boolean}})=>({tag:member.tag,failed:!!member.error||!member.coverage?.available}));}
   catch{members=pending.map(tag=>({tag,failed:true}));}
-  return {status:publicJob(await completeMembers(db,config.tag,input.runId,members))};
+  const completed=await completeMembers(db,config.tag,input.runId,members);
+  if(completed?.status==='complete'||completed?.status==='partial')await invalidateClanViews(config.tag);
+  return {status:publicJob(completed)};
 }

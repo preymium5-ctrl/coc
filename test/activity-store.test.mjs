@@ -59,7 +59,7 @@ test('concurrent member completions and repeated acknowledgements never overcoun
 });
 test('lost collectors recover after their lease; stale runs cannot overwrite a new run',async t=>{
   const db=fixture(t);await touchCollector(db,tag,now);await claimJob(db,tag,'old',now);
-  assert.equal(await claimJob(db,tag,'too-early',now+SYNC_INTERVAL_MS),null);
+  assert.equal(await claimJob(db,tag,'too-early',now+SYNC_LEASE_MS-1),null);
   assert.ok(await claimJob(db,tag,'replacement',now+SYNC_LEASE_MS));
   await setJobRoster(db,tag,'replacement',['#B'],now+SYNC_LEASE_MS);
   await completeMembers(db,tag,'old',[{tag:'#A'}],now+SYNC_LEASE_MS+100);
@@ -86,7 +86,17 @@ test('failed runs are retried, and public status distinguishes an offline collec
   await failJob(db,tag,'one',now+1000);
   const job=await readJob(db,tag),status=publicJob(job,now+2000);
   assert.equal(status.state,'failed');assert.equal(status.online,true);assert.equal(status.lastSuccessfulAt,null);
-  assert.equal(publicJob(job,now+91000).online,false);
-  assert.equal(await claimJob(db,tag,'early',now+SYNC_INTERVAL_MS),null);
-  assert.ok(await claimJob(db,tag,'retry',now+SYNC_INTERVAL_MS+1000));
+  assert.equal(publicJob(job,now+Math.max(90_000,SYNC_INTERVAL_MS*1.5)+1).online,false);
+  assert.equal(await claimJob(db,tag,'early',now+SYNC_INTERVAL_MS-1),null);
+  assert.ok(await claimJob(db,tag,'retry',now+SYNC_INTERVAL_MS));
+});
+
+test('a delayed hourly cron remains due at the next hour instead of skipping a scheduled run',async t=>{
+  const db=fixture(t),delayed=now+45_000;
+  await touchCollector(db,tag,delayed);await claimJob(db,tag,'one',delayed);
+  await setJobRoster(db,tag,'one',['#A'],delayed);
+  const result=await completeMembers(db,tag,'one',[{tag:'#A'}],delayed+30_000);
+  assert.equal(result.next_at,now+SYNC_INTERVAL_MS);
+  assert.equal(await claimJob(db,tag,'early',now+SYNC_INTERVAL_MS-1),null);
+  assert.ok(await claimJob(db,tag,'next-hour',now+SYNC_INTERVAL_MS));
 });

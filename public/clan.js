@@ -33,6 +33,7 @@ renderVillage=function(){const html=beforeClanVillage();return state.player.clan
 
 async function clanJSON(path,options={}){
   const response=await fetch(path,{...options,headers:{Accept:'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...options.headers},credentials:'same-origin',cache:'no-store',signal:options.signal||AbortSignal.timeout(40000)});
+  if(response.status===429)throw new Error('Too many requests. Please wait a minute before trying again.');
   let data;try{data=await response.json();}catch{throw new Error('The clan data connection is temporarily unavailable.');}
   if(!response.ok)throw new Error(data.error||'Could not load clan data.');return data;
 }

@@ -23,14 +23,16 @@ async function collect(job){
   }}
   await Promise.all([worker(),worker()]);
 }
-console.log('Activity auto-sync started: checking the published clan every minute.');
+console.log('Activity auto-sync started: syncing the published clans hourly.');
 while(!abort.signal.aborted&&parentAlive()){
+  let waitMs=60000;
   try{
     const result=await call({action:'begin'});
     if(unavailable){console.log('Activity auto-sync connected.');unavailable=false;}
-    if(result.job){await collect(result.job);console.log('Activity sync cycle finished for '+result.job.memberTags.length+' members.');}
+    if(result.job){await collect(result.job);console.log('Activity sync cycle finished for '+result.job.memberTags.length+' members.');waitMs=1000;}
+    else if(result.status?.nextSyncAt)waitMs=Math.max(1000,Math.min(3600000,Date.parse(result.status.nextSyncAt)-Date.now()));
   }catch{
     if(!abort.signal.aborted&&!unavailable){console.log('Activity collector is waiting for the local server; it will retry automatically.');unavailable=true;}
   }
-  if(!abort.signal.aborted&&parentAlive())await delay(5000,undefined,{signal:abort.signal}).catch(()=>{});
+  if(!abort.signal.aborted&&parentAlive())await delay(waitMs,undefined,{signal:abort.signal}).catch(()=>{});
 }

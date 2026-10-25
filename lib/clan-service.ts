@@ -1,26 +1,27 @@
 import {ApiError,configuration,normalizeTag,getPlayer,officialGet,communityGet,normalizeBattles,mergeBattle,coalesceBattles} from './coc-service.mjs';
 import {periodBounds,collectionStart,decorateProfile,troopUsage,cwlAverages,orientWar} from './clan-analytics.mjs';
-import {cached,playerBattles,savedBattlesById,savedRankedBattles,saveBattles,syncInfo,clanTotals,memberAttacks} from './clan-store';
+import {cachedHourly,playerBattles,savedBattlesById,savedRankedBattles,saveBattles,syncInfo,clanTotals,memberAttacks} from './clan-store';
+import {currentRefresh} from './refresh-policy.mjs';
 import {rankedWindow,rankedAttackAllowance,rankedAttackWindow,rankedAttackProgress,fetchRankedTournament} from './ranked-tournament.mjs';
 import {capitalRaidSummary} from './clan-events.mjs';
 import {observeClanGames,readClanGames,verifyClanGamesScore} from './clan-games';
 
-export async function getPublicProfile(input:string){const tag=normalizeTag(input);return cached('profile:'+tag,async()=>decorateProfile(await getPlayer(tag)),90);}
+export async function getPublicProfile(input:string){const tag=normalizeTag(input);return cachedHourly('profile:'+tag,async()=>decorateProfile(await getPlayer(tag)));}
 export async function getClan(input:string){
   const tag=normalizeTag(input);
-  return cached('clan:'+tag,async()=>{
+  return cachedHourly('clan:'+tag,async()=>{
     const clan=await officialGet('/clans/'+encodeURIComponent(tag),configuration(),undefined);
     if(clan?.tag!==tag||!Array.isArray(clan.memberList))throw new ApiError(502,'invalid_clan','The provider did not return a valid clan roster.');
     return {...clan,memberList:clan.memberList.map((m:{tag:string;townHallLevel?:number;townhallLevel?:number})=>({...m,townHallLevel:m.townHallLevel??m.townhallLevel??null}))};
-  },60);
+  });
 }
 async function collectPlayer(tag:string,timeZone:string,knownProfile?:any){
   const baseAfter=collectionStart(timeZone),saved=await syncInfo(tag),prior=saved?JSON.parse(saved.coverage):null;
-  if(saved&&Date.now()-saved.synced_at<45000&&prior.ranked&&prior.windowStart<=baseAfter)return {tag,coverage:prior,cached:true};
+  if(saved&&currentRefresh(saved.synced_at)&&prior.ranked&&prior.windowStart<=baseAfter)return {tag,coverage:prior,cached:true};
   const profile=knownProfile||await getPublicProfile(tag).catch(()=>null),window=rankedWindow(profile);
   if(profile)await observeClanGames(profile);
   const after=new Date(Math.min(Date.parse(baseAfter),Date.parse(window.start))).toISOString();
-  const result=await cached('combat:v2:'+tag+':'+after,async()=>{
+  const result=await cachedHourly('combat:v3:'+tag+':'+after,async()=>{
     const [recent,history,tournament]=await Promise.allSettled([
       officialGet('/players/'+encodeURIComponent(tag)+'/battlelog',configuration(),undefined),
       communityGet('/player/'+encodeURIComponent(tag)+'/battlelog/history?time%5Bafter%5D='+encodeURIComponent(after),undefined),
@@ -33,7 +34,7 @@ async function collectPlayer(tag:string,timeZone:string,knownProfile?:any){
     const length=(value:{items?:unknown[]}|unknown[])=>Array.isArray(value)?value.length:Array.isArray(value?.items)?value.items.length:0;
     const ranked=tournament.status==='fulfilled'?(({battles,...metadata})=>metadata)(tournament.value):{status:'unavailable',window};
     return {battles:[...byId.values()],coverage:{available:recent.status==='fulfilled'||history.status==='fulfilled'||ranked.status==='available',official:recent.status==='fulfilled'?'available':'unavailable',history:history.status==='fulfilled'?'available':'unavailable',ranked,windowStart:after,truncated:recent.status==='fulfilled'&&length(recent.value)>1000||history.status==='fulfilled'&&length(history.value)>1000}};
-  },45);
+  });
   const [previous,rankedSaved]=await Promise.all([savedBattlesById(tag,result.battles.map(b=>b.id)),savedRankedBattles(tag,window.start,window.end)]);
   const merged=coalesceBattles([...previous,...rankedSaved,...result.battles]);
   await saveBattles(tag,merged.battles,result.coverage,merged.duplicateIds);
@@ -42,9 +43,11 @@ async function collectPlayer(tag:string,timeZone:string,knownProfile?:any){
 function bounds(period:string,timeZone:string){try{return periodBounds(period,timeZone);}catch{throw new ApiError(400,'invalid_period','Choose a valid period and time zone.');}}
 export async function getClanLeaderboard(input:string,period='day',timeZone='Asia/Singapore'){
   const window=bounds(period,timeZone),clan=await getClan(input),rankedWeek=rankedWindow(),tags=clan.memberList.map((m:{tag:string})=>m.tag);
+  return cachedHourly('clan-board:'+clan.tag+':'+period+':'+timeZone+':'+window.start,async()=>{
   const [totals,weekly]=await Promise.all([clanTotals(tags,window.start,window.end),clanTotals(tags,rankedWeek.start,rankedWeek.end)]);
   const members=clan.memberList.map((member:{tag:string})=>({...member,...totals.find(row=>row.tag===member.tag),rankedAttacks:weekly.find(row=>row.tag===member.tag)?.rankedAttacks??null}));
   return {clanTag:clan.tag,clanName:clan.name,window,rankedWindow:rankedWeek,members,fetchedAt:new Date().toISOString(),synced:members.filter((m:{available?:boolean})=>m.available).length,total:members.length};
+  });
 }
 export async function syncClanMembers(input:string,tags:unknown,timeZone='Asia/Singapore'){
   bounds('month',timeZone);
@@ -57,10 +60,14 @@ export async function syncClanMembers(input:string,tags:unknown,timeZone='Asia/S
 }
 export async function getMemberDetails(input:string,timeZone='Asia/Singapore'){
   const tag=normalizeTag(input);bounds('month',timeZone);
+  const day=periodBounds('day',timeZone);
+  return cachedHourly('member-details:'+tag+':'+timeZone+':'+day.start,()=>readMemberDetails(tag,timeZone));
+}
+async function readMemberDetails(tag:string,timeZone:string){
   const profile=await getPublicProfile(tag);
   const [sync,cwl]=await Promise.all([
     collectPlayer(tag,timeZone,profile),
-    cached('cwl-player:'+tag,()=>communityGet('/player/'+encodeURIComponent(tag)+'/cwl/history?limit=12',undefined),300).then(data=>({status:'available',items:cwlAverages(data)})).catch(()=>({status:'unavailable',items:[]})),
+    cachedHourly('cwl-player:'+tag,()=>communityGet('/player/'+encodeURIComponent(tag)+'/cwl/history?limit=12',undefined)).then(data=>({status:'available',items:cwlAverages(data)})).catch(()=>({status:'unavailable',items:[]})),
   ]);
   const battles=await playerBattles(tag,collectionStart(timeZone));
   const month=periodBounds('month',timeZone),current=battles.filter(b=>new Date(b.date)>=new Date(month.start));
@@ -78,7 +85,7 @@ export async function getMemberDetails(input:string,timeZone='Asia/Singapore'){
 
 export async function getCapitalRaids(input:string){
   const clan=await getClan(input);
-  const payload=await cached('capital-raids:'+clan.tag,()=>officialGet('/clans/'+encodeURIComponent(clan.tag)+'/capitalraidseasons?limit=2',configuration(),undefined),30);
+  const payload=await cachedHourly('capital-raids:'+clan.tag,()=>officialGet('/clans/'+encodeURIComponent(clan.tag)+'/capitalraidseasons?limit=2',configuration(),undefined));
   return capitalRaidSummary(clan,payload);
 }
 export async function getClanGames(input:string){
@@ -100,7 +107,7 @@ export async function setClanGamesPoints(clanInput:string,playerInput:string,poi
 type War={state?:string;clan?:{tag?:string};opponent?:{tag?:string};startTime?:string;[key:string]:unknown};
 export async function getCurrentClanWar(input:string){
   const tag=normalizeTag(input);await getClan(tag);
-  return cached('war-view:'+tag,async()=>{
+  return cachedHourly('war-view:'+tag,async()=>{
     const current=await officialGet('/clans/'+encodeURIComponent(tag)+'/currentwar',configuration(),undefined).then((data:War)=>({status:'available',data:orientWar(data,tag)})).catch((error:{status?:number})=>({status:error.status===403?'private':'unavailable',data:null}));
     if(current.data?.state&&current.data.state!=='notInWar')return {...current,source:'Supercell',fetchedAt:new Date().toISOString()};
     const group=await communityGet('/cwl/'+encodeURIComponent(tag)+'/group?season='+new Date().toISOString().slice(0,7),undefined).catch(()=>null);
@@ -114,5 +121,5 @@ export async function getCurrentClanWar(input:string){
       if(active)return {status:'available',data:active,source:'Supercell CWL',fetchedAt:new Date().toISOString()};
     }
     return {...current,source:'Supercell',fetchedAt:new Date().toISOString()};
-  },30);
+  });
 }

@@ -1,13 +1,16 @@
 import {env} from '#raidroom-runtime';
 import {readClanTotals} from './clan-totals.mjs';
 import {readMemberAttacks} from './member-attacks.mjs';
+import {nextRefreshAt,REFRESH_SECONDS} from './refresh-policy.mjs';
 type Battle={id:string;date:string;type:string;mode:string;gold:number|null;elixir:number|null;dark:number|null;[key:string]:unknown};
 function database(){if(!env.DB)throw new Error('Clan storage is not configured.');return env.DB;}
-export async function cached<T>(key:string,loader:()=>Promise<T>,seconds=60):Promise<T>{
+export async function cached<T>(key:string,loader:()=>Promise<T>,seconds=60,expiresAt?:number):Promise<T>{
   const db=database();const saved=await db.prepare('SELECT data, expires_at FROM public_cache WHERE key = ?').bind(key).first<{data:string;expires_at:number}>();
   if(saved&&saved.expires_at>Date.now())return JSON.parse(saved.data) as T;
-  const value=await loader();await db.prepare('INSERT INTO public_cache (key,data,expires_at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET data=excluded.data, expires_at=excluded.expires_at').bind(key,JSON.stringify(value),Date.now()+seconds*1000).run();return value;
+  const value=await loader();await db.prepare('INSERT INTO public_cache (key,data,expires_at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET data=excluded.data, expires_at=excluded.expires_at').bind(key,JSON.stringify(value),expiresAt??Date.now()+seconds*1000).run();return value;
 }
+export function cachedHourly<T>(key:string,loader:()=>Promise<T>):Promise<T>{return cached('hourly:'+key,loader,REFRESH_SECONDS,nextRefreshAt());}
+export async function invalidateClanViews(tag:string){await database().prepare('DELETE FROM public_cache WHERE key LIKE ?').bind('hourly:clan-board:'+tag+':%').run();}
 export async function playerBattles(tag:string,start:string){
   const rows=await database().prepare('SELECT data FROM raid_battles WHERE player_tag = ? AND occurred_at >= ? ORDER BY occurred_at DESC LIMIT 3000').bind(tag,new Date(start).getTime()).all<{data:string}>();
   return rows.results.map(row=>JSON.parse(row.data) as Battle);
@@ -30,6 +33,7 @@ export async function saveBattles(tag:string,battles:Battle[],coverage:unknown,d
       ON CONFLICT(id) DO UPDATE SET gold=excluded.gold,elixir=excluded.elixir,dark=excluded.dark,data=excluded.data WHERE raid_battles.data IS NOT excluded.data`).bind(JSON.stringify(rows)));
   }
   if(duplicateIds.length)statements.push(db.prepare('DELETE FROM raid_battles WHERE player_tag=? AND id IN (SELECT value FROM json_each(?))').bind(tag,JSON.stringify(duplicateIds)));
+  statements.push(db.prepare('DELETE FROM public_cache WHERE key LIKE ?').bind('hourly:member-details:'+tag+':%'));
   statements.push(db.prepare('INSERT INTO player_sync (tag,synced_at,coverage) VALUES (?,?,?) ON CONFLICT(tag) DO UPDATE SET synced_at=excluded.synced_at,coverage=excluded.coverage').bind(tag,Date.now(),JSON.stringify(coverage)));
   await db.batch(statements);
 }
