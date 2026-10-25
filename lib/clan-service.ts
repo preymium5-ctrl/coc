@@ -1,12 +1,16 @@
 import {ApiError,configuration,normalizeTag,getPlayer,officialGet,communityGet,normalizeBattles,mergeBattle,coalesceBattles} from './coc-service.mjs';
 import {periodBounds,collectionStart,decorateProfile,troopUsage,cwlAverages,orientWar} from './clan-analytics.mjs';
-import {cachedHourly,playerBattles,savedBattlesById,savedRankedBattles,saveBattles,syncInfo,clanTotals,memberAttacks} from './clan-store';
+import {cachedHourly,previousCached,playerBattles,savedBattlesById,savedRankedBattles,saveBattles,syncInfo,clanTotals,memberAttacks} from './clan-store';
+import {profileSnapshot} from './profile-cache.mjs';
 import {currentRefresh} from './refresh-policy.mjs';
 import {rankedWindow,rankedAttackAllowance,rankedAttackWindow,rankedAttackProgress,fetchRankedTournament} from './ranked-tournament.mjs';
 import {capitalRaidSummary} from './clan-events.mjs';
 import {observeClanGames,readClanGames,verifyClanGamesScore} from './clan-games';
 
-export async function getPublicProfile(input:string){const tag=normalizeTag(input);return cachedHourly('profile:'+tag,async()=>decorateProfile(await getPlayer(tag)));}
+export async function getPublicProfile(input:string){
+  const tag=normalizeTag(input);
+  return cachedHourly('profile:'+tag,()=>profileSnapshot(tag,async()=>decorateProfile(await getPlayer(tag)),()=>previousCached(['hourly:profile:'+tag,'profile:'+tag])));
+}
 export async function getClan(input:string){
   const tag=normalizeTag(input);
   return cachedHourly('clan:'+tag,async()=>{
@@ -19,7 +23,7 @@ async function collectPlayer(tag:string,timeZone:string,knownProfile?:any){
   const baseAfter=collectionStart(timeZone),saved=await syncInfo(tag),prior=saved?JSON.parse(saved.coverage):null;
   if(saved&&currentRefresh(saved.synced_at)&&prior.ranked&&prior.windowStart<=baseAfter)return {tag,coverage:prior,cached:true};
   const profile=knownProfile||await getPublicProfile(tag).catch(()=>null),window=rankedWindow(profile);
-  if(profile)await observeClanGames(profile);
+  if(profile&&!profile.profileFreshness?.stale)await observeClanGames(profile);
   const after=new Date(Math.min(Date.parse(baseAfter),Date.parse(window.start))).toISOString();
   const result=await cachedHourly('combat:v3:'+tag+':'+after,async()=>{
     const [recent,history,tournament]=await Promise.allSettled([
@@ -93,7 +97,7 @@ export async function getClanGames(input:string){
   // The automatic collector records the whole roster; fill any new member snapshots on demand.
   const current=await readClanGames(clan),missing=current.members.filter((m:any)=>!m.startedAt);
   let cursor=0;
-  await Promise.all(Array.from({length:4},async()=>{while(cursor<missing.length){const member=missing[cursor++];await getPublicProfile(member.tag).then(observeClanGames).catch(()=>null);}}));
+  await Promise.all(Array.from({length:4},async()=>{while(cursor<missing.length){const member=missing[cursor++];await getPublicProfile(member.tag).then(profile=>profile.profileFreshness?.stale?null:observeClanGames(profile)).catch(()=>null);}}));
   return readClanGames(clan);
 }
 export async function setClanGamesPoints(clanInput:string,playerInput:string,points:unknown){

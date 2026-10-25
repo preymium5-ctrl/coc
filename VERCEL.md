@@ -40,7 +40,7 @@ After deployment, open **`https://YOUR-SITE.vercel.app/admin`**, sign in with th
 
 The included Vercel Pro cron runs **once per hour**, at minute zero (`0 * * * *`). Production uses `RAIDROOM_SYNC_INTERVAL_SECONDS=3600`. Values below an hour are ignored, preventing an old minute setting from restoring frequent collection. Both clans are collected during the same invocation. Open dashboards refresh hourly, including admin player views; returning to a tab only refreshes when an hour is due.
 
-Game profiles, battle feeds, wars, Capital raids, Games history, member details, and leaderboards share server caches that expire at the next hourly boundary. A completed collector run invalidates derived member and clan summaries. For a Hobby deployment, change the cron schedule to `0 0 * * *` and the interval to `86400`.
+Game profiles, battle feeds, wars, Capital raids, Games history, member details, and leaderboards share server caches that expire at the next hourly boundary. A completed collector run invalidates derived member and clan summaries. During a transient profile-feed outage, an existing real profile can be served with a saved-data notice; stale profile counters are never treated as new Clan Games observations. For a Hobby deployment, change the cron schedule to `0 0 * * *` and the interval to `86400`.
 
 An external scheduler, if used, should make an hourly GET request to `/api/cron/activity` with `Authorization: Bearer YOUR_CRON_SECRET`. Keep the secret in the scheduler's private header settings and allow enough request time for a full clan round. The endpoint always verifies the secret. Do not add a second scheduler to a deployment already using Vercel cron.
 

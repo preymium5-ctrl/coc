@@ -10,6 +10,10 @@ export async function cached<T>(key:string,loader:()=>Promise<T>,seconds=60,expi
   const value=await loader();await db.prepare('INSERT INTO public_cache (key,data,expires_at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET data=excluded.data, expires_at=excluded.expires_at').bind(key,JSON.stringify(value),expiresAt??Date.now()+seconds*1000).run();return value;
 }
 export function cachedHourly<T>(key:string,loader:()=>Promise<T>):Promise<T>{return cached('hourly:'+key,loader,REFRESH_SECONDS,nextRefreshAt());}
+export async function previousCached(keys:string[]){
+  const saved=await database().prepare(`SELECT data FROM public_cache WHERE key IN (${keys.map(()=>'?').join(',')}) ORDER BY expires_at DESC LIMIT 1`).bind(...keys).first<{data:string}>();
+  return saved?JSON.parse(saved.data):null;
+}
 export async function invalidateClanViews(tag:string){await database().prepare('DELETE FROM public_cache WHERE key LIKE ?').bind('hourly:clan-board:'+tag+':%').run();}
 export async function playerBattles(tag:string,start:string){
   const rows=await database().prepare('SELECT data FROM raid_battles WHERE player_tag = ? AND occurred_at >= ? ORDER BY occurred_at DESC LIMIT 3000').bind(tag,new Date(start).getTime()).all<{data:string}>();
